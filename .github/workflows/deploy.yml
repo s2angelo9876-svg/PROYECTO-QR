@@ -1,0 +1,89 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Tests + Lint + Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test:run
+        env:
+          JWT_SECRET: test-secret-for-ci-only-not-production-32chars
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+        env:
+          JWT_SECRET: test-secret-for-ci-only-not-production-32chars
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: |
+            .next
+            public
+
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copy to VPS via SSH
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: '.next,public,package.json,package-lock.json,next.config.js'
+          target: /tmp/sca-qr-deploy
+          strip_components: .
+
+      - name: Install + Restart on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /var/www/sca-qr
+            # Backup de la versión anterior
+            cp -r .next .next.backup 2>/dev/null || true
+            
+            # Copiar nuevos archivos
+            cp -r /tmp/sca-qr-deploy/.next .
+            cp /tmp/sca-qr-deploy/package.json .
+            cp /tmp/sca-qr-deploy/package-lock.json .
+            
+            # Instalar deps y reiniciar
+            npm ci --production
+            pm2 restart sca-qr || pm2 start npm --name sca-qr -- start
+            
+            # Limpiar
+            rm -rf .next.backup
+            rm -rf /tmp/sca-qr-deploy
+            
+            echo "✓ Deploy completado"

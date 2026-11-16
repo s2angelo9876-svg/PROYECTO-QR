@@ -1,0 +1,23 @@
+{
+  "name": "SCA-QR Control de Ingreso",
+  "short_name": "SCA-QR",
+  "description": "Sistema de Control de Asistencia Escolar con QR - Demo PWA",
+  "start_url": "/ingreso",
+  "scope": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0f172a",
+  "theme_color": "#0288d1",
+  "categories": ["education", "productivity"],
+  "icons": [
+    { "src": "/icons/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icons/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Marcación Manual",
+      "url": "/ingreso?mode=manual",
+      "description": "Búsqueda manual por DNI o nombre"
+    }
+  ]
+}
