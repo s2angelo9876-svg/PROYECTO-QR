@@ -1,3 +1,4 @@
+import { demoGuard, originGuard } from '@/lib/demoMode';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/auth';
@@ -36,6 +37,12 @@ const Schema = z.discriminatedUnion('type', [
 ]);
 
 export async function POST(req: NextRequest) {
+  const denied = demoGuard() || originGuard(req);
+  if (denied) return denied;
+  if (process.env.SCA_EMAIL_ENABLED !== 'true') {
+    return NextResponse.json({ ok: false, code: 'CHANNEL_DISABLED',
+      message: 'El correo está deshabilitado en esta fase. Descarga el reporte para compartirlo manualmente.' }, { status: 503 });
+  }
   const auth = await requireAuth(req);
   if (auth instanceof NextResponse) return auth;
 

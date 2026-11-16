@@ -12,13 +12,15 @@ export const UI_CONFIG = {
 } as const;
 
 export const SYNC_CONFIG = {
-  MAX_QUEUE_SIZE: 1000,
-  MAX_RETRY_ATTEMPTS: 3,
+  MAX_QUEUE_SIZE: 5000,
+  RETRY_BASE_MS: 2_000,
+  RETRY_MAX_MS: 5 * 60_000,
+  LEASE_MS: 30_000,
   SYNC_TIMEOUT_MS: 10_000,
 } as const;
 
 export const STORAGE_KEYS = {
-  DB_NAME: process.env.NODE_ENV === 'test' ? `SCA_OFFLINE_DB_TEST_${Math.random().toString(36).slice(2, 8)}` : 'SCA_OFFLINE_DB',
+  DB_NAME: 'SCA_OFFLINE_DB',
   STORE_PENDING: 'pending_scans',
   STORE_RECENT: 'recent_scans',
 } as const;

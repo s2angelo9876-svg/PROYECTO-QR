@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useClock } from '@/lib/useClock';
 import type { ScannerConfig, ScannerStatus } from '@/types/attendance';
 
 interface Props {
@@ -30,13 +30,7 @@ export default function ScannerStatusGrid({
   getStatus,
   onTestScanner,
 }: Props) {
-  const [, setTick] = useState(0);
-
-  // Re-render cada segundo para mantener el tiempo relativo
-  useEffect(() => {
-    const interval = setInterval(() => setTick((t) => t + 1), 1000);
-    return () => clearInterval(interval);
-  }, []);
+  const now = useClock();
 
   return (
     <div className="w-full max-w-4xl">
@@ -49,7 +43,7 @@ export default function ScannerStatusGrid({
         </div>
         <div className="flex items-center gap-2 text-xs text-slate-400">
           <span className="tabular-nums font-bold text-sky-400">{scanners.length}</span>
-          <span>escáneres en línea</span>
+          <span>lectores configurados</span>
         </div>
       </div>
 
@@ -58,7 +52,7 @@ export default function ScannerStatusGrid({
           const status = getStatus(scanner.id);
           const isRecent =
             Boolean(status?.lastScanAt) &&
-            Date.now() - (status?.lastScanAt || 0) < 3000;
+            now - (status?.lastScanAt || 0) < 3000;
 
           const isSuccess = status?.lastStatus === 'SUCCESS';
           const isWarning = status?.lastStatus === 'WARNING';

@@ -1,8 +1,11 @@
+import { demoGuard } from '@/lib/demoMode';
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { getAttendanceLog } from '@/lib/mockData-exports';
 
 export async function GET(request: NextRequest) {
+  const denied = demoGuard();
+  if (denied) return denied;
   const auth = await requireAuth(request);
   if (auth instanceof NextResponse) return auth;
 

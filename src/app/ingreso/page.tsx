@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import MultiScannerInput from '@/components/MultiScannerInput';
@@ -10,387 +10,172 @@ import RecentScans from '@/components/RecentScans';
 import ManualSearch from '@/components/ManualSearch';
 import ScannerStatusGrid from '@/components/ScannerStatusGrid';
 import ScannerHub from '@/components/ScannerHub';
+import OutboxPanel from '@/components/OutboxPanel';
 import { soundManager } from '@/lib/audio';
-import {
-  saveScanOffline,
-  syncOfflineQueue,
-  getPendingCount,
-  saveRecentScan,
-} from '@/lib/offlineQueue';
+import { enqueueScan, syncOfflineQueue, getPendingCount, OUTBOX_EVENT, type SyncResult } from '@/lib/offlineQueue';
 import { parseQR, verifyQRSignature, generateDemoQR } from '@/lib/qrValidator';
 import { UI_CONFIG } from '@/lib/constants';
 import { MOCK_STUDENTS } from '@/lib/mockData';
-import {
-  getStudentFromCache,
-  refreshStudentsCache,
-  getCacheInfo,
-  type StudentsCacheInfo,
-} from '@/lib/studentsCache';
-import type {
-  ScanResult,
-  ApiScanResponse,
-  MultiScanEvent,
-  ScannerConfig,
-  ScannerStatus,
-  EntranceConfig,
-} from '@/types/attendance';
+import { getStudentFromCache, refreshStudentsCache, getCacheInfo } from '@/lib/studentsCache';
+import type { ScanResult, MultiScanEvent, ScannerStatus, EntranceConfig } from '@/types/attendance';
+import { z } from 'zod';
 
+const EntranceSchema = z.object({
+  id: z.string().min(1).max(40), label: z.string().max(100),
+  scanners: z.array(z.object({ id: z.string().min(1).max(40), label: z.string().max(100),
+    position: z.enum(['left', 'center', 'right', 'special']), prefix: z.string().min(1).max(50) })).min(1).max(8),
+});
 const DEFAULT_ENTRANCE_CONFIG: EntranceConfig = {
-  id: 'NORTE',
-  label: 'Entrada Norte',
-  scanners: [
-    { id: 'N1', label: 'Puerta Principal', position: 'left', prefix: 'N1|' },
-    { id: 'N2', label: 'Puerta Lateral', position: 'center', prefix: 'N2|' },
-    { id: 'N3', label: 'Puerta Trasera', position: 'right', prefix: 'N3|' },
-    { id: 'N4', label: 'Acceso Preferencial', position: 'special', prefix: 'N4|' },
-  ],
+  id: 'NORTE', label: 'Entrada Norte',
+  scanners: [{ id: 'N1', label: 'Lector piloto', position: 'center', prefix: 'N1|' }],
 };
 
 function IngresoPageInner() {
   const searchParams = useSearchParams();
-  const initialMode = searchParams.get('mode') === 'manual';
-
   const [result, setResult] = useState<ScanResult | null>(null);
   const [isOnline, setIsOnline] = useState(true);
   const [pendingCount, setPendingCount] = useState(0);
-  const [showManual, setShowManual] = useState(initialMode);
+  const [showManual, setShowManual] = useState(searchParams.get('mode') === 'manual');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
-
-  const [scannerStatuses, setScannerStatuses] = useState<
-    Record<string, ScannerStatus>
-  >({});
-  const [entranceConfig, setEntranceConfig] = useState<EntranceConfig>(
-    DEFAULT_ENTRANCE_CONFIG
-  );
-  const [cacheInfo, setCacheInfo] = useState<StudentsCacheInfo>({
-    count: 0,
-    ageMs: null,
-    isStale: true,
-    lastFetchedAt: null,
-  });
-
-  // Reloj en tiempo real
-  useEffect(() => {
-    const updateTime = () => {
-      setCurrentTime(
-        new Date().toLocaleTimeString('es-PE', {
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: false,
-        })
-      );
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
+  const [storageError, setStorageError] = useState<string | null>(null);
+  const [workerError, setWorkerError] = useState(false);
+  const [storageReady, setStorageReady] = useState(false);
+  const [scannerStatuses, setScannerStatuses] = useState<Record<string, ScannerStatus>>({});
+  const [entranceConfig, setEntranceConfig] = useState<EntranceConfig>(DEFAULT_ENTRANCE_CONFIG);
+  const latestScanId = useRef<string | null>(null);
+  const invalidInput = useCallback((message: string) => {
+    latestScanId.current = null;
+    setResult({ status: 'ERROR', message, timestamp: new Date().toLocaleTimeString('es-PE', {
+      timeZone: 'America/Lima', hour12: false,
+    }), scanId: crypto.randomUUID() });
   }, []);
 
-  // Inicializar estados de scanners + cache de estudiantes
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    setIsOnline(navigator.onLine);
-    getPendingCount().then(setPendingCount);
-
-    const saved = localStorage.getItem('sca-qr-entrance-config');
-    if (saved) {
-      try {
-        setEntranceConfig(JSON.parse(saved));
-      } catch {
-        // ignore
+  const applySyncResult = useCallback((sync: SyncResult) => {
+    setPendingCount(sync.remaining);
+    const event = sync.events.find((item) => item.scanId === latestScanId.current);
+    if (!event) return;
+    setResult((current) => {
+      if (!current || current.scanId !== event.scanId) return current;
+      if (event.acknowledgement) {
+        const ack = event.acknowledgement;
+        return { ...current, student: ack.student, isOffline: false,
+          status: ack.persistence === 'durable' && !ack.is_burst ? 'SUCCESS' : 'WARNING',
+          message: ack.persistence === 'durable' ? ack.message : 'Recibido en demo · Copia local conservada',
+          attendanceStatus: ack.persistence === 'durable' ? ack.attendance_status : undefined };
       }
-    }
-
-    const savedStatuses = localStorage.getItem('sca-qr-scanner-statuses');
-    if (savedStatuses) {
-      try {
-        setScannerStatuses(JSON.parse(savedStatuses));
-      } catch {
-        // ignore
-      }
-    }
-
-    const initCache = async () => {
-      const current = await getCacheInfo();
-      setCacheInfo(current);
-
-      if (current.count === 0 || current.isStale) {
-        if (navigator.onLine) {
-          const res = await refreshStudentsCache();
-          if (res.ok && res.count) {
-            const updated = await getCacheInfo();
-            setCacheInfo(updated);
-          }
-        }
-      }
-    };
-    initCache();
+      return { ...current, status: event.state === 'REJECTED' ? 'ERROR' : 'WARNING', isOffline: true,
+        message: event.state === 'REVIEW' ? 'Requiere revisión · Copia local conservada'
+          : event.state === 'REJECTED' ? 'Marcación rechazada · Copia local conservada'
+          : event.state === 'BLOCKED_AUTH' ? 'Inicia sesión para sincronizar · Copia local conservada'
+          : 'Pendiente de envío · Copia local conservada' };
+    });
   }, []);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem(
-      'sca-qr-entrance-config',
-      JSON.stringify(entranceConfig)
-    );
-  }, [entranceConfig]);
-
-  // Sincronización online/offline
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const handleOnline = async () => {
-      setIsOnline(true);
-      const res = await syncOfflineQueue();
-      const count = await getPendingCount();
-      setPendingCount(count);
-      if (res.synced > 0) {
-        if (soundEnabled) soundManager.play('success');
-        setResult({
-          status: 'SUCCESS',
-          message: `✓ Sincronizados ${res.synced} registros`,
-          timestamp: new Date().toLocaleTimeString('es-PE', { hour12: false }),
-          scanId: crypto.randomUUID(),
-        });
-        setTimeout(() => setResult(null), UI_CONFIG.RESULT_DISPLAY_MS);
-      }
+    let active = true;
+    const fail = () => { if (active) setStorageError('No se puede verificar el almacenamiento local. Cierra otras pestañas e inténtalo de nuevo.'); };
+    const workerFailed = () => { if (active) setWorkerError(true); };
+    const updateClock = () => setCurrentTime(new Date().toLocaleTimeString('es-PE', {
+      timeZone: 'America/Lima', hour12: false,
+    }));
+    const refreshCount = () => { void getPendingCount().then((count) => { if (active) setPendingCount(count); }).catch(fail); };
+    const synchronize = async () => {
+      if (!navigator.onLine) return;
+      try { const sync = await syncOfflineQueue(); if (active) applySyncResult(sync); } catch { fail(); }
     };
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    const interval = setInterval(async () => {
-      const count = await getPendingCount();
-      setPendingCount(count);
-      if (navigator.onLine) {
-        const res = await syncOfflineQueue();
-        if (res.synced > 0) {
-          const newCount = await getPendingCount();
-          setPendingCount(newCount);
+    const online = () => { setIsOnline(true); void synchronize(); };
+    const offline = () => setIsOnline(false);
+    const initialize = async () => {
+      try {
+        setIsOnline(navigator.onLine);
+        const saved = localStorage.getItem('sca-qr-entrance-config');
+        if (saved) {
+          let config: unknown;
+          try { config = JSON.parse(saved); } catch { config = null; }
+          const parsed = EntranceSchema.safeParse(config);
+          if (parsed.success && active) setEntranceConfig(parsed.data);
         }
-      }
-    }, UI_CONFIG.OFFLINE_RETRY_INTERVAL_MS);
-
+        await getPendingCount();
+        if (!active) return;
+        setStorageReady(true);
+        const info = await getCacheInfo();
+        if (navigator.onLine && info.isStale) await refreshStudentsCache();
+        refreshCount();
+        await synchronize();
+      } catch { fail(); }
+    };
+    updateClock();
+    void initialize();
+    const clock = setInterval(updateClock, 1000);
+    const retry = setInterval(() => { refreshCount(); void synchronize(); }, UI_CONFIG.OFFLINE_RETRY_INTERVAL_MS);
+    window.addEventListener('online', online);
+    window.addEventListener('offline', offline);
+    window.addEventListener('sca-storage-error', fail);
+    window.addEventListener('sca-worker-error', workerFailed);
+    window.addEventListener(OUTBOX_EVENT, refreshCount);
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-      clearInterval(interval);
+      active = false; clearInterval(clock); clearInterval(retry);
+      window.removeEventListener('online', online); window.removeEventListener('offline', offline);
+      window.removeEventListener('sca-storage-error', fail); window.removeEventListener(OUTBOX_EVENT, refreshCount);
+      window.removeEventListener('sca-worker-error', workerFailed);
     };
-  }, [soundEnabled]);
+  }, [applySyncResult]);
 
-  // Auto-clear del resultado (después de 4.5 segundos)
+  useEffect(() => {
+    if (!storageReady) return;
+    try { localStorage.setItem('sca-qr-entrance-config', JSON.stringify(entranceConfig)); }
+    catch { /* Configuration is optional; the outbox uses IndexedDB and reports its own failures. */ }
+  }, [entranceConfig, storageReady]);
+
   useEffect(() => {
     if (!result) return;
-    const t = setTimeout(() => setResult(null), UI_CONFIG.RESULT_DISPLAY_MS);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setResult(null), UI_CONFIG.RESULT_DISPLAY_MS);
+    return () => clearTimeout(timer);
   }, [result]);
 
-  const updateScannerStatus = useCallback(
-    (scannerId: string, update: Partial<ScannerStatus>) => {
-      setScannerStatuses((prev) => {
-        const current = prev[scannerId] || {
-          id: scannerId,
-          label: '',
-          position: 'center' as const,
-          lastScanAt: null,
-          lastStudentName: null,
-          lastStatus: null,
-          totalScans: 0,
-          isActive: false,
-        };
-        const next = { ...current, ...update };
-        const newState = { ...prev, [scannerId]: next };
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('sca-qr-scanner-statuses', JSON.stringify(newState));
-        }
-        return newState;
-      });
-    },
-    []
-  );
+  const updateScannerStatus = useCallback((scannerId: string, update: Partial<ScannerStatus>, increment = false) => {
+    setScannerStatuses((prev) => {
+      const current = prev[scannerId] || { id: scannerId, label: '', position: 'center' as const,
+        lastScanAt: null, lastStudentName: null, lastStatus: null, totalScans: 0, isActive: false };
+      return { ...prev, [scannerId]: { ...current, ...update,
+        totalScans: current.totalScans + (increment ? 1 : 0) } };
+    });
+  }, []);
 
-  // Handler principal de escaneo
-  const handleMultiScan = useCallback(
-    async (event: MultiScanEvent) => {
-      const time = new Date().toLocaleTimeString('es-PE', { hour12: false });
-      const newScanId = crypto.randomUUID();
-      const scanner = entranceConfig.scanners.find(
-        (s) => s.id === event.scannerId
-      );
-
-      updateScannerStatus(event.scannerId, {
-        label: scanner?.label || event.scannerId,
-        position: scanner?.position || 'center',
-        isActive: true,
-      });
-
-      const parsed = parseQR(event.qrCode);
-      if (!parsed.valid) {
-        if (soundEnabled) soundManager.play('error');
-        setResult({
-          status: 'ERROR',
-          message: parsed.error || 'QR inválido',
-          timestamp: time,
-          scanId: newScanId,
-        });
-        updateScannerStatus(event.scannerId, {
-          lastScanAt: Date.now(),
-          lastStudentName: undefined,
-          lastStatus: 'ERROR',
-          totalScans:
-            (scannerStatuses[event.scannerId]?.totalScans || 0) + 1,
-          isActive: false,
-        });
-        saveRecentScan({
-          scanId: newScanId,
-          status: 'ERROR',
-          timestamp: new Date().toISOString(),
-          isOffline: false,
-        });
-        return;
-      }
-
-      if (!verifyQRSignature(parsed.code, parsed.signature)) {
-        if (soundEnabled) soundManager.play('error');
-        setResult({
-          status: 'ERROR',
-          message: '🛡️ QR NO AUTÉNTICO',
-          timestamp: time,
-          scanId: newScanId,
-        });
-        updateScannerStatus(event.scannerId, {
-          lastScanAt: Date.now(),
-          lastStatus: 'ERROR',
-          totalScans:
-            (scannerStatuses[event.scannerId]?.totalScans || 0) + 1,
-          isActive: false,
-        });
-        return;
-      }
-
-      const localStudent = await getStudentFromCache(parsed.code);
-      const hasInternet = navigator.onLine;
-      const shouldGoOffline = !hasInternet || !localStudent;
-
-      if (shouldGoOffline) {
-        try {
-          await saveScanOffline(parsed.code, parsed.signature, event.isBurst);
-          setPendingCount((c) => c + 1);
-
-          if (localStudent) {
-            const scanResult: ScanResult = {
-              status: event.isBurst ? 'WARNING' : 'SUCCESS',
-              message: event.isBurst
-                ? '⚠️ Verificar manualmente'
-                : 'Registro local (sin conexión)',
-              student: localStudent,
-              timestamp: time,
-              isOffline: true,
-              scanId: newScanId,
-            };
-            setResult(scanResult);
-            if (soundEnabled) soundManager.play(event.isBurst ? 'warning' : 'success');
-            updateScannerStatus(event.scannerId, {
-              lastScanAt: Date.now(),
-              lastStudentName: localStudent.fullName,
-              lastStatus: scanResult.status,
-              totalScans:
-                (scannerStatuses[event.scannerId]?.totalScans || 0) + 1,
-              isActive: false,
-            });
-          } else {
-            if (soundEnabled) soundManager.play('warning');
-            setResult({
-              status: 'WARNING',
-              message: 'Sin conexión + sin cache local',
-              timestamp: time,
-              isOffline: true,
-              scanId: newScanId,
-            });
-            updateScannerStatus(event.scannerId, {
-              lastScanAt: Date.now(),
-              lastStatus: 'WARNING',
-              totalScans:
-                (scannerStatuses[event.scannerId]?.totalScans || 0) + 1,
-              isActive: false,
-            });
-          }
-          saveRecentScan({
-            scanId: newScanId,
-            studentName: localStudent?.fullName,
-            status: event.isBurst ? 'WARNING' : 'SUCCESS',
-            timestamp: new Date().toISOString(),
-            isOffline: true,
-          });
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : 'Error';
-          if (soundEnabled) soundManager.play('error');
-          setResult({
-            status: 'ERROR',
-            message: msg,
-            timestamp: time,
-            scanId: newScanId,
-          });
-        }
-        return;
-      }
-
-      if (localStudent) {
-        const scanResult: ScanResult = {
-          status: event.isBurst ? 'WARNING' : 'SUCCESS',
-          message: event.isBurst
-            ? '⚠️ Ráfaga detectada'
-            : 'Entrada registrada',
-          student: localStudent,
-          timestamp: time,
-          attendanceStatus: 'ON_TIME',
-          scanId: newScanId,
-        };
-        setResult(scanResult);
-        if (soundEnabled) soundManager.play(event.isBurst ? 'warning' : 'success');
-        updateScannerStatus(event.scannerId, {
-          lastScanAt: Date.now(),
-          lastStudentName: localStudent.fullName,
-          lastStatus: scanResult.status,
-          totalScans:
-            (scannerStatuses[event.scannerId]?.totalScans || 0) + 1,
-          isActive: false,
-        });
-        saveRecentScan({
-          scanId: newScanId,
-          studentName: localStudent.fullName,
-          status: scanResult.status,
-          timestamp: new Date().toISOString(),
-          isOffline: false,
-        });
-      }
-
-      fetch('/api/attendances/scan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          qr_code: parsed.code,
-          qr_signature: parsed.signature,
-          is_burst: event.isBurst,
-          client_scan_id: newScanId,
-          scanner_id: event.scannerId,
-          entrance_id: event.entranceId,
-        }),
-      })
-        .then(async (res) => {
-          const data: ApiScanResponse = await res.json();
-          if (res.ok && data.ok && data.is_burst !== event.isBurst && data.is_burst) {
-            if (soundEnabled) soundManager.play('warning');
-          }
-        })
-        .catch(() => {});
-    },
-    [entranceConfig, scannerStatuses, updateScannerStatus, soundEnabled]
-  );
+  const handleMultiScan = useCallback(async (event: MultiScanEvent) => {
+    const scanId = crypto.randomUUID();
+    latestScanId.current = scanId;
+    const time = new Date(event.timestamp).toLocaleTimeString('es-PE', { timeZone: 'America/Lima', hour12: false });
+    const parsed = parseQR(event.qrCode);
+    if (!parsed.valid || !verifyQRSignature(parsed.code, parsed.signature)) {
+      setResult({ status: 'ERROR', message: parsed.error || 'QR no válido para el demo', timestamp: time, scanId });
+      if (soundEnabled) soundManager.play('error');
+      return;
+    }
+    let stored = false;
+    try {
+      if (!storageReady || storageError) throw new Error('LOCAL_STORAGE_UNAVAILABLE');
+      await enqueueScan({ scanId, qrCode: parsed.code, qrSignature: parsed.signature,
+        isBurst: event.isBurst, timestamp: new Date(event.timestamp).toISOString(),
+        scannerId: event.scannerId, entranceId: event.entranceId });
+      stored = true;
+      setPendingCount(await getPendingCount());
+      const student = await getStudentFromCache(parsed.code);
+      setResult({ status: 'WARNING', message: 'Guardado localmente · Pendiente de confirmación',
+        timestamp: time, scanId, isOffline: true, student });
+      updateScannerStatus(event.scannerId, { label: entranceConfig.scanners.find((s) => s.id === event.scannerId)?.label || event.scannerId,
+        lastScanAt: Date.now(), lastStudentName: student?.fullName || null, lastStatus: 'WARNING', isActive: false }, true);
+      if (soundEnabled) soundManager.play('warning');
+      if (navigator.onLine) applySyncResult(await syncOfflineQueue());
+    } catch {
+      setResult({ status: stored ? 'WARNING' : 'ERROR',
+        message: stored ? 'Copia local conservada · Sincronización pendiente'
+          : 'No se guardó la marcación · Revisa el almacenamiento local', timestamp: time, scanId, isOffline: stored });
+      if (!stored) setStorageError('No se pudo guardar. Exporta una copia si está disponible y contacta al responsable.');
+    }
+  }, [storageReady, storageError, soundEnabled, entranceConfig.scanners, updateScannerStatus, applySyncResult]);
 
   const switchEntrance = useCallback((entranceId: string) => {
     setEntranceConfig((prev) => {
@@ -429,9 +214,16 @@ function IngresoPageInner() {
         entranceId={entranceConfig.id}
         scanners={entranceConfig.scanners}
         onScan={handleMultiScan}
-        enabled={!showManual}
+        enabled={!showManual && storageReady && !storageError}
+        onInvalidInput={invalidInput}
       />
 
+      <div className="mb-3 rounded-xl border border-amber-500/40 bg-amber-950/40 p-3 text-sm text-amber-100">
+        Demostración con datos ficticios. El servidor no conserva registros al reiniciarse; mantén la copia local.
+      </div>
+      {storageError && <div role="alert" className="mb-3 rounded-xl border border-rose-500 p-3 text-rose-200">{storageError}</div>}
+      {workerError && <p role="status" className="mb-3 text-amber-200">No se habilitó el arranque offline. Mantén abierta esta página y exporta una copia antes de cerrarla.</p>}
+      <OutboxPanel onSynchronized={applySyncResult} />
       {/* Barra de Navegación Superior / Telemetría */}
       <nav className="w-full flex flex-wrap items-center justify-between gap-3 mb-6 relative z-20">
         {/* Lado Izquierdo: Switchers y Controles */}
@@ -491,15 +283,9 @@ function IngresoPageInner() {
             entranceLabel={entranceConfig.label}
             scanners={entranceConfig.scanners}
             scannerStatuses={scannerStatuses}
-            onSimulateTestScan={(scannerId) => {
-              // Simular escaneo de prueba
-              handleMultiScan({
-                qrCode: generateDemoQR('72345678'),
-                scannerId,
-                entranceId: entranceConfig.id,
-                isBurst: false,
-                timestamp: Date.now(),
-              });
+            onSimulateTestScan={() => {
+              setResult({ status: 'WARNING', message: 'Prueba de sonido y pantalla · No registra asistencia',
+                timestamp: currentTime, scanId: crypto.randomUUID() });
             }}
           />
 
@@ -544,7 +330,7 @@ function IngresoPageInner() {
           <span>
             {showManual
               ? 'Modo manual activo · Seleccione un alumno de la lista'
-              : `${entranceConfig.scanners.length} escáneres ópticos sincronizados · Acerque el carnet`}
+              : `${entranceConfig.scanners.length} lectores configurados · Acerque el carnet`}
           </span>
         </div>
       </header>

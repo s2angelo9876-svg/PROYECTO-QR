@@ -1,6 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useSyncExternalStore } from 'react';
+import { useClock } from '@/lib/useClock';
+const subscribeCapabilities = () => () => {};
+const supportsHid = () => 'hid' in navigator;
+const serverSupportsHid = () => false;
 import type { ScannerConfig, ScannerStatus } from '@/types/attendance';
 import { soundManager } from '@/lib/audio';
 
@@ -34,23 +38,16 @@ export default function ScannerHub({
   onSimulateTestScan,
 }: Props) {
   const [isOpen, setIsOpen] = useState(false);
-  const [webHidSupported, setWebHidSupported] = useState(false);
+  const webHidSupported = useSyncExternalStore(subscribeCapabilities, supportsHid, serverSupportsHid);
   const [usbDevicesCount, setUsbDevicesCount] = useState<number | null>(null);
   const [testingScannerId, setTestingScannerId] = useState<string | null>(null);
-  const [, setClockTick] = useState(0);
-
-  // Tick cada segundo para actualizar tiempos de inactividad
-  useEffect(() => {
-    const timer = setInterval(() => setClockTick((t) => t + 1), 1000);
-    return () => clearInterval(timer);
-  }, []);
+  const now = useClock();
 
   // Verificar soporte de WebHID API para detección física
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (!webHidSupported) return;
 
     if ('hid' in navigator && (navigator as any).hid) {
-      setWebHidSupported(true);
       const hid = (navigator as any).hid;
 
       // Obtener dispositivos ya emparejados
@@ -76,7 +73,7 @@ export default function ScannerHub({
         hid.removeEventListener('disconnect', handleDisconnect);
       };
     }
-  }, []);
+  }, [webHidSupported]);
 
   // Solicitar permiso WebHID si el usuario desea inspeccionar el hardware
   const handleRequestWebHid = async () => {
@@ -93,8 +90,7 @@ export default function ScannerHub({
   };
 
   // Calcular la salud de cada scanner
-  const scannerHealthList = useMemo(() => {
-    const now = Date.now();
+  const scannerHealthList = (() => {
     return scanners.map((scanner) => {
       const status = scannerStatuses[scanner.id];
       const lastScan = status?.lastScanAt;
@@ -119,7 +115,7 @@ export default function ScannerHub({
         lastScanMs: diffMs,
       };
     });
-  }, [scanners, scannerStatuses]);
+  })();
 
   const activeCount = scannerHealthList.filter(
     (s) => s.connectionState === 'ACTIVE' || s.connectionState === 'ONLINE' || s.connectionState === 'READY'
@@ -152,13 +148,13 @@ export default function ScannerHub({
 
         <div className="flex items-center gap-1.5 text-xs">
           <span className="font-bold text-slate-200 tracking-tight">
-            Escáneres USB:
+            Lectores configurados:
           </span>
           <span className="font-extrabold text-emerald-400 tabular-nums">
             {activeCount}/{scanners.length}
           </span>
           <span className="text-slate-400 font-medium hidden sm:inline">
-            listos
+            configurados
           </span>
         </div>
 
@@ -166,7 +162,7 @@ export default function ScannerHub({
         <div className="flex items-center gap-1 pl-1 border-l border-white/10">
           {scanners.map((s) => {
             const st = scannerStatuses[s.id];
-            const isFresh = st?.lastScanAt && Date.now() - st.lastScanAt < 5000;
+            const isFresh = st?.lastScanAt && now - st.lastScanAt < 5000;
             return (
               <span
                 key={s.id}
@@ -193,6 +189,7 @@ export default function ScannerHub({
           onClick={() => setIsOpen(false)}
         >
           <div
+            role="dialog" aria-modal="true" aria-label="Configuración de lectores"
             className="w-full max-w-2xl glass-card rounded-3xl p-6 border border-white/10 shadow-2xl relative"
             onClick={(e) => e.stopPropagation()}
             style={{ transformOrigin: 'top center' }}
@@ -210,7 +207,7 @@ export default function ScannerHub({
                   </span>
                 </div>
                 <p className="text-xs text-slate-400">
-                  Monitoreo en tiempo real de los lectores USB HID conectados a esta terminal
+                  Configuración y actividad observada; no confirma conexión física de lectores en modo teclado
                 </p>
               </div>
 
@@ -236,7 +233,7 @@ export default function ScannerHub({
                   <p className="text-[11px] text-slate-400">
                     {webHidSupported
                       ? usbDevicesCount !== null && usbDevicesCount > 0
-                        ? `WebHID vinculó ${usbDevicesCount} dispositivo(s) USB.`
+                        ? `El navegador autorizó ${usbDevicesCount} dispositivo(s) WebHID.`
                         : 'WebHID activo · Soporte directo de hardware en este navegador.'
                       : 'Navegador en modo HID Standard (captura por evento de buffer).'}
                   </p>
@@ -259,7 +256,7 @@ export default function ScannerHub({
                 const isTesting = testingScannerId === scanner.id;
                 const isRecent =
                   scanner.status?.lastScanAt &&
-                  Date.now() - scanner.status.lastScanAt < 5000;
+                  now - scanner.status.lastScanAt < 5000;
 
                 return (
                   <div
@@ -295,7 +292,7 @@ export default function ScannerHub({
                       <div className="flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                         <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
-                          LISTO
+                          CONFIGURADO
                         </span>
                       </div>
                     </div>

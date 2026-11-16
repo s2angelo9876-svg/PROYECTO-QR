@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 import { useState, useMemo } from 'react';
 import type { Student } from '@/types/attendance';
 import { generateDemoQR } from '@/lib/qrValidator';
@@ -95,7 +97,8 @@ export default function ManualSearch({ students, onSelect, onCancel }: Props) {
                   onClick={() => onSelect(generateDemoQR(s.dni))}
                   className="pressable w-full flex items-center gap-3.5 p-3 rounded-2xl hover:bg-white/[0.06] border border-transparent hover:border-white/10 text-left transition-all group cursor-pointer"
                 >
-                  <img
+                  <Image
+                    width={48} height={48} unoptimized
                     src={s.photoUrl}
                     alt={s.fullName}
                     className="w-12 h-12 rounded-full object-cover bg-slate-800 border-2 border-white/10 group-hover:border-sky-400/50 transition-colors shrink-0"

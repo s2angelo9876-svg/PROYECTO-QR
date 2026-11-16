@@ -38,6 +38,13 @@ export interface PendingScan {
   timestamp: string;
   retryCount: number;
   lastError?: string;
+  terminalId?: string;
+  scannerId?: string;
+  entranceId?: string;
+  state?: 'PENDING' | 'SENDING' | 'RETRY' | 'BLOCKED_AUTH' | 'REVIEW' | 'REJECTED' | 'ACKED';
+  nextAttemptAt?: number;
+  payloadHash?: string;
+  acknowledgement?: ApiScanSuccess;
 }
 
 export interface RecentScan {
@@ -56,6 +63,7 @@ export interface ApiScanRequest {
   scanner_id?: string;
   entrance_id?: string;
   offline_timestamp?: string;
+  terminal_id?: string;
 }
 
 export interface ApiScanSuccess {
@@ -67,11 +75,14 @@ export interface ApiScanSuccess {
   message: string;
   server_timestamp: string;
   idempotent?: boolean;
+  client_scan_id: string;
+  payload_hash: string;
+  persistence: 'memory-demo' | 'durable';
 }
 
 export interface ApiScanError {
   ok: false;
-  code: 'INVALID_QR' | 'EXPIRED_QR' | 'STUDENT_NOT_FOUND' | 'DUPLICATE_SCAN' | 'UNAUTHORIZED' | 'INTERNAL';
+  code: 'INVALID_QR' | 'EXPIRED_QR' | 'STUDENT_NOT_FOUND' | 'DUPLICATE_SCAN' | 'UNAUTHORIZED' | 'INTERNAL' | 'IDEMPOTENCY_KEY_REUSED' | 'INVALID_INPUT' | 'DEMO_DISABLED';
   message: string;
 }
 

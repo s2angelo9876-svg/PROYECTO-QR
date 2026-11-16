@@ -1,3 +1,4 @@
+import { demoGuard, originGuard } from '@/lib/demoMode';
 import { NextResponse } from 'next/server';
 import { MOCK_STUDENTS } from '@/lib/mockData';
 import { getCache, cached } from '@/lib/cache';
@@ -8,7 +9,11 @@ const CACHE_KEY = 'students:all';
 const CACHE_TTL_SECONDS = 300; // 5 minutos
 
 export async function GET() {
+  const denied = demoGuard();
+  if (denied) return denied;
   try {
+    const cache = getCache();
+    const wasHit = (await cache.get(CACHE_KEY)) !== null;
     const data = await cached(
       CACHE_KEY,
       CACHE_TTL_SECONDS,
@@ -20,12 +25,9 @@ export async function GET() {
       }),
     );
 
-    const cache = getCache();
-    const wasHit = (await cache.get(CACHE_KEY)) !== null;
-
     return NextResponse.json(data, {
       headers: {
-        'Cache-Control': 'public, max-age=60, s-maxage=300',
+        'Cache-Control': 'no-store',
         'X-Cache': wasHit ? 'HIT' : 'MISS',
         'X-Cache-Backend': cache.backend,
       },
@@ -40,7 +42,9 @@ export async function GET() {
 }
 
 // Endpoint para refrescar el cache (llamar cuando se actualicen alumnos)
-export async function POST() {
+export async function POST(request: Request) {
+  const denied = demoGuard() || originGuard(request);
+  if (denied) return denied;
   const cache = getCache();
   await cache.delete(CACHE_KEY);
   return NextResponse.json({ ok: true, message: 'Cache invalidado' });

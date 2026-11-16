@@ -1,168 +1,82 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { getStudentByDni, checkIdempotency, saveIdempotency, logAttendance, getAttendanceLog, MOCK_STUDENTS } from '@/lib/mockData-exports';
-import { getCache } from '@/lib/cache';
-import type { ApiScanRequest, ApiScanResponse, AttendanceStatus, Student } from '@/types/attendance';
+import { readJsonBody } from '@/lib/httpBody';
+import { NextResponse } from 'next/server';
+import { demoGuard, originGuard } from '@/lib/demoMode';
+import { hashScanCommand, ScanCommandSchema } from '@/lib/scanContract';
+import {
+  getStudentByDni, checkIdempotency, saveIdempotency, logAttendance, getAttendanceLog, MOCK_STUDENTS,
+} from '@/lib/mockData-exports';
+import type { ApiScanSuccess, AttendanceStatus } from '@/types/attendance';
 
-const ScanSchema = z.object({
-  qr_code: z.string().min(1).max(200),
-  qr_signature: z.string().min(1).max(500),
-  is_burst: z.boolean(),
-  client_scan_id: z.string().min(1).max(100),
-  scanner_id: z.string().optional(),
-  entrance_id: z.string().optional(),
-  offline_timestamp: z.string().datetime().optional(),
-});
-
-function computeAttendanceStatus(shift: string, isBurst: boolean, isExit: boolean): AttendanceStatus {
-  const now = new Date();
-  const hour = now.getHours();
-  const minute = now.getMinutes();
-  const timeDecimal = hour + minute / 60;
-
-  if (isExit) return 'EXIT';
-
-  // Turno mañana: 7:00 - 13:00. Tolerancia 10 min
-  if (shift === 'MORNING') {
-    if (timeDecimal < 7) return 'EARLY_LEAVE';
-    if (timeDecimal <= 7.17) return 'ON_TIME'; // 7:10
-    if (timeDecimal < 13) return 'LATE';
-    return 'EXIT';
-  }
-  if (shift === 'AFTERNOON') {
-    if (timeDecimal < 13) return 'EARLY_LEAVE';
-    if (timeDecimal <= 13.17) return 'ON_TIME';
-    if (timeDecimal < 18) return 'LATE';
-    return 'EXIT';
-  }
-  return 'ON_TIME';
+// Prototype domain policy; institutional calendars/entry-exit rules belong to the next phases.
+function demoStatus(shift: string, at: Date): AttendanceStatus {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).formatToParts(at);
+  const minutes = Number(parts.find((p) => p.type === 'hour')?.value) * 60
+    + Number(parts.find((p) => p.type === 'minute')?.value);
+  const start = shift === 'MORNING' ? 7 * 60 : shift === 'AFTERNOON' ? 13 * 60 : 18 * 60;
+  const end = shift === 'MORNING' ? 13 * 60 : shift === 'AFTERNOON' ? 18 * 60 : 22 * 60;
+  return minutes >= end ? 'EXIT' : minutes > start + 10 ? 'LATE' : 'ON_TIME';
 }
 
-export async function POST(req: NextRequest) {
+const json = (body: unknown, status = 200) => NextResponse.json(body, {
+  status, headers: { 'Cache-Control': 'no-store' },
+});
+
+export async function POST(request: Request) {
+  const denied = demoGuard() || originGuard(request);
+  if (denied) return denied;
   try {
-    const body = await req.json();
-    const parsed = ScanSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        {
-          ok: false,
-          code: 'INVALID_QR',
-          message: 'Payload inválido: ' + parsed.error.issues[0].message,
-        } satisfies ApiScanResponse,
-        { status: 400 },
-      );
-    }
-
-    const data: ApiScanRequest = parsed.data;
-
-    // 1. Idempotencia
-    const cached = checkIdempotency(data.client_scan_id) as ApiScanResponse | null;
-    if (cached && cached.ok) {
-      return NextResponse.json({ ...cached, idempotent: true });
-    }
-
-    // 2. Buscar estudiante por DNI (con cache)
-    const cache = getCache();
-    const cacheKey = `student:${data.qr_code}`;
-    let student: Student | null = await cache.get<Student>(cacheKey);
-    if (!student) {
-      const found = getStudentByDni(data.qr_code);
-      if (found) {
-        // Cachear por 1 hora - los datos de alumnos cambian poco
-        await cache.set(cacheKey, found, 3600);
-        student = found;
+    const body = await readJsonBody(request);
+    if (!body.ok) return json({ ok: false, code: 'INVALID_INPUT', message: 'JSON inválido o solicitud demasiado grande' }, body.status);
+    const parsed = ScanCommandSchema.safeParse(body.value);
+    if (!parsed.success) return json({ ok: false, code: 'INVALID_INPUT', message: 'Marcación inválida' }, 422);
+    const data = parsed.data;
+    const hash = await hashScanCommand(data);
+    const key = `${data.terminal_id || 'legacy'}:${data.client_scan_id}`;
+    const cached = checkIdempotency(key) as ApiScanSuccess | null;
+    if (cached) {
+      if (cached.payload_hash !== hash) {
+        return json({ ok: false, code: 'IDEMPOTENCY_KEY_REUSED', message: 'El ID pertenece a otro contenido' }, 409);
       }
+      return json({ ...cached, idempotent: true });
     }
-    if (!student) {
-      return NextResponse.json(
-        {
-          ok: false,
-          code: 'STUDENT_NOT_FOUND',
-          message: `DNI ${data.qr_code} no encontrado en el sistema`,
-        } satisfies ApiScanResponse,
-        { status: 404 },
-      );
+    // No awaits from this check through saveIdempotency: serialize only within this demo process.
+    // This is deliberately NOT a substitute for the PostgreSQL transaction planned in phase 2.
+    const student = getStudentByDni(data.qr_code);
+    if (!student) return json({ ok: false, code: 'STUDENT_NOT_FOUND', message: 'Alumno no encontrado' }, 404);
+    if (student.status !== 'ACTIVE') {
+      return json({ ok: false, code: 'INVALID_QR', message: 'Alumno inactivo: requiere revisión del responsable' }, 403);
     }
-
-    // 3. Validar firma (DEMO: cualquier firma >= 8 chars pasa)
-    if (data.qr_signature.length < 8) {
-      return NextResponse.json(
-        {
-          ok: false,
-          code: 'INVALID_QR',
-          message: 'Firma del QR inválida',
-        } satisfies ApiScanResponse,
-        { status: 400 },
-      );
+    // Demo signatures remain non-cryptographic; the demo guard prevents enabling this as production.
+    if (data.qr_signature.length < 8) return json({ ok: false, code: 'INVALID_QR', message: 'Firma demo inválida' }, 400);
+    const occurredAt = data.offline_timestamp ? new Date(data.offline_timestamp) : new Date();
+    if (occurredAt.getTime() > Date.now() + 5 * 60_000) {
+      return json({ ok: false, code: 'INVALID_INPUT', message: 'Fecha futura: revisa el reloj de la terminal' }, 422);
     }
-
-    // 4. Verificar duplicados recientes (anti doble marcación)
-    const recentDuplicate = getAttendanceLog().find(
-      (a) => a.student_id === student.id &&
-        Date.now() - new Date(a.timestamp).getTime() < 60_000, // 1 min
-    );
-    if (recentDuplicate && !data.is_burst) {
-      return NextResponse.json(
-        {
-          ok: false,
-          code: 'DUPLICATE_SCAN',
-          message: `${student.firstName} ya marcó entrada hace menos de 1 minuto`,
-        } satisfies ApiScanResponse,
-        { status: 409 },
-      );
-    }
-
-    // 5. Determinar estado de asistencia
-    const attendanceStatus = computeAttendanceStatus(student.shift, data.is_burst, false);
+    const duplicate = getAttendanceLog().find((entry) => entry.student_id === student.id &&
+      Math.abs(occurredAt.getTime() - new Date(entry.timestamp).getTime()) < 60_000);
+    if (duplicate) return json({ ok: false, code: 'DUPLICATE_SCAN', message: 'Lectura reciente: requiere revisión' }, 409);
     const scanId = crypto.randomUUID();
-    const isOfflineSync = !!data.offline_timestamp;
-
-    // 6. Registrar (en producción: INSERT en BD)
-    logAttendance({
-      scan_id: scanId,
-      student_id: student.id,
-      student,
-      timestamp: data.offline_timestamp ?? new Date().toISOString(),
-      is_burst: data.is_burst,
-      status: attendanceStatus,
-      is_offline_sync: isOfflineSync,
-      scanner_id: data.scanner_id,
-      entrance_id: data.entrance_id,
-    });
-
-    // 7. Construir respuesta
-    const response: ApiScanResponse = {
-      ok: true,
-      scan_id: scanId,
-      attendance_status: attendanceStatus,
-      is_burst: data.is_burst,
-      student,
-      message: data.is_burst
-        ? `⚠️ Ráfaga detectada [${data.scanner_id || '?'}]`
-        : `Entrada registrada: ${attendanceStatus}`,
+    const status = demoStatus(student.shift, occurredAt);
+    logAttendance({ scan_id: scanId, student_id: student.id, student, timestamp: occurredAt.toISOString(),
+      is_burst: data.is_burst, status, is_offline_sync: !!data.offline_timestamp,
+      scanner_id: data.scanner_id, entrance_id: data.entrance_id });
+    const response: ApiScanSuccess = {
+      ok: true, scan_id: scanId, client_scan_id: data.client_scan_id, payload_hash: hash,
+      persistence: 'memory-demo', attendance_status: status, is_burst: data.is_burst,
+      student, message: 'Recibido por servidor de demostración; conserva la copia local',
       server_timestamp: new Date().toISOString(),
     };
-
-    saveIdempotency(data.client_scan_id, response);
-
-    return NextResponse.json(response);
-  } catch (err) {
-    console.error('[API /scan] Error:', err);
-    return NextResponse.json(
-      {
-        ok: false,
-        code: 'INTERNAL',
-        message: 'Error interno del servidor',
-      } satisfies ApiScanResponse,
-      { status: 500 },
-    );
+    saveIdempotency(key, response);
+    return json(response);
+  } catch {
+    console.error('[scan] REQUEST_FAILED');
+    return json({ ok: false, code: 'INTERNAL', message: 'No se pudo procesar la marcación' }, 500);
   }
 }
 
 export async function GET() {
-  return NextResponse.json({
-    ok: true,
-    service: 'SCA-QR Scan API (Demo)',
-    students_count: MOCK_STUDENTS.length,
-  });
+  const denied = demoGuard();
+  return denied || json({ ok: true, service: 'SCA-QR Scan API (Demo)', students_count: MOCK_STUDENTS.length });
 }

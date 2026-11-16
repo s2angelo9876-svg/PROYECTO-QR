@@ -1,5 +1,8 @@
+import { readJsonBody } from '@/lib/httpBody';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { demoGuard, originGuard } from '@/lib/demoMode';
+import { sessionConfigured } from '@/lib/authToken';
 import {
   signToken,
   setAuthCookie,
@@ -13,9 +16,14 @@ const LoginSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const denied = demoGuard() || originGuard(req);
+  if (denied) return denied;
+  if (!sessionConfigured()) return NextResponse.json({ ok: false, code: 'SESSION_CONFIGURATION_REQUIRED',
+    message: 'Configura JWT_SECRET con al menos 32 caracteres aleatorios para habilitar el acceso.' }, { status: 503 });
   try {
-    const body = await req.json();
-    const parsed = LoginSchema.safeParse(body);
+    const body = await readJsonBody(req);
+    if (!body.ok) return NextResponse.json({ ok: false, code: 'INVALID_INPUT', message: 'JSON inválido o solicitud demasiado grande' }, { status: body.status });
+    const parsed = LoginSchema.safeParse(body.value);
     if (!parsed.success) {
       return NextResponse.json(
         { ok: false, code: 'INVALID_INPUT', message: 'Datos inválidos' },
@@ -74,7 +82,7 @@ export async function POST(req: NextRequest) {
     setAuthCookie(response, token);
     return response;
   } catch (err) {
-    console.error('[API /admin/login] Error:', err);
+    console.error('[API /admin/login] REQUEST_FAILED');
     return NextResponse.json(
       { ok: false, code: 'INTERNAL', message: 'Error interno' },
       { status: 500 },

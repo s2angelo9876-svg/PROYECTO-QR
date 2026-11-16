@@ -36,21 +36,14 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async () => {
-    try {
-      const res = await fetch('/api/admin/stats', { cache: 'no-store' });
+  const fetchData = () => fetch('/api/admin/stats', { cache: 'no-store' })
+    .then(async (res) => {
       const json = await res.json();
-      if (!res.ok || !json.ok) {
-        setError(json.message || 'Error al cargar datos');
-        return;
-      }
-      setData(json);
-    } catch {
-      setError('Error de conexión');
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (!res.ok || !json.ok) throw new Error('No se pudieron cargar las estadísticas');
+      return json;
+    }).then((json) => { setData(json); setError(null); })
+    .catch(() => setError('Error de conexión'))
+    .finally(() => setLoading(false));
 
   useEffect(() => {
     fetchData();

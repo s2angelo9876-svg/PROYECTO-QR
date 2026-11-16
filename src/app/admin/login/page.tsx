@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { safeLoginRedirect } from '@/lib/safeRedirect';
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get('redirect') || '/admin/dashboard';
+  const redirect = safeLoginRedirect(searchParams.get('redirect'));
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -29,8 +29,9 @@ function LoginForm() {
         setError(data.message || 'Error de autenticación');
         return;
       }
-      router.push(redirect);
-      router.refresh();
+      // Authentication changes invalidate prefetched unauthenticated redirects and RSC state.
+      // A full document navigation re-enters the verified session boundary with the new cookie.
+      window.location.assign(redirect);
     } catch {
       setError('Error de conexión con el servidor');
     } finally {

@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
-import { registerServiceWorker } from '@/lib/serviceWorkerRegistration';
+import ServiceWorkerRegistration from '@/components/ServiceWorkerRegistration';
 
 export const metadata: Metadata = {
   title: 'SCA-QR · Control de Ingreso',
@@ -22,8 +22,6 @@ export const viewport: Viewport = {
   themeColor: '#0288d1',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -31,11 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es">
       <body>
         {children}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(${registerServiceWorker.toString()})();`,
-          }}
-        />
+        <ServiceWorkerRegistration />
       </body>
     </html>
   );

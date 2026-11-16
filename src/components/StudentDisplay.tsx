@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 import { useMemo } from 'react';
 import type { ScanResult as ScanResultType, AttendanceStatus } from '@/types/attendance';
 
@@ -96,7 +98,8 @@ export default function StudentDisplay({ result }: Props) {
         <div className="flex flex-col items-center gap-5 mt-2">
           {/* Student photo with glowing ring */}
           <div className="relative">
-            <img
+            <Image
+                    width={208} height={208} unoptimized
               src={result.student.photoUrl}
               alt={`Foto de ${result.student.fullName}`}
               className={`w-40 h-40 md:w-52 md:h-52 rounded-full object-cover bg-slate-800 ${theme.photoRing}`}

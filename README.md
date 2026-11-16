@@ -1,181 +1,70 @@
-# SCA-QR · Demo PWA de Control de Asistencia
+# SCA-QR · Control de asistencia escolar
 
-Sistema de Control de Asistencia Escolar con códigos QR, implementado como **PWA** con soporte offline completo.
+Prototipo PWA con datos ficticios. Primera entrega técnica del [SDD](docs/SDD_MEJORA_GRATUITA.md), con [controles de seguridad y límites documentados](docs/IMPLEMENTACION_FASE_1.md).
 
-## 🚀 Inicio Rápido
+**El backend actual usa memoria volátil.** No utilizar con datos reales hasta completar persistencia, cuentas/roles institucionales, credenciales QR y recuperación. El frontend conserva copias locales; una respuesta del demo no se presenta como asistencia institucional definitiva.
+
+## Inicio local
+
+Requisitos: **Node 24.x y npm 11.x**. Versión de referencia en `.nvmrc`.
 
 ```bash
-# 1. Instalar dependencias
-npm install
-
-# 2. Generar archivos de audio (tonos sintéticos para el demo)
-node scripts/generate-sounds.js
-
-# 3. Modo desarrollo
+npm ci
+node scripts/setup-demo.mjs
 npm run dev
-
-# 4. Abrir en el navegador
-# http://localhost:3000
 ```
 
-## 📋 Códigos QR de Prueba
+El helper crea `.env.local` con un secreto JWT aleatorio, sin mostrarlo ni sobrescribir archivos existentes. No lo subas a Git. Si ya existe configuración, revisa de forma segura `SCA_DEMO_MODE` y `JWT_SECRET`.
 
-El demo incluye 8 estudiantes mockeados. Usa estos códigos (formato `DNI|firma`):
+En desarrollo el demo está habilitado. Fuera de desarrollo necesita `SCA_DEMO_MODE=true` explícito; sin activación las APIs ficticias responden 503. El acceso administrativo necesita un secreto configurado de al menos 32 caracteres. No hay secretos de respaldo.
 
-| DNI | Firma | Estudiante |
-|-----|-------|------------|
-| 72345678 | SCAQR723 | Sofía Quispe Mamani |
-| 71234567 | SCAQR712 | Mateo Huamán Rivera |
-| 73456789 | SCAQR734 | Valentina Chávez López |
-| 74567890 | SCAQR745 | Sebastián Rojas (SUSPENDIDO) |
-| 75678901 | SCAQR756 | Camila Vargas Salazar |
-| 76789012 | SCAQR767 | Diego Mendoza Aguilar |
-| 77890123 | SCAQR778 | Isabella Castillo Núñez |
-| 78901234 | SCAQR789 | Lucas Paredes (GRADUADO) |
+El demo incluye ocho alumnos ficticios; acceso de prueba `admin` / `admin123`, disponible exclusivamente en el modo demo. Abre la pantalla de ingreso y usa búsqueda manual o los botones de simulación. Los sonidos y avatares de demostración son assets locales, sin proveedores externos.
 
-**Para probar la app**, abre la búsqueda manual y selecciona cualquier estudiante, o usa el lector USB y escanea los códigos impresos.
+## Captura y desconexión
 
-## 🧪 Escenarios de Prueba
+- Toda captura admitida se guarda primero en IndexedDB con un único ID y su lector/entrada.
+- Ámbar significa pendiente, recepción demo o revisión. El prototipo no confirma persistencia institucional ni puntualidad definitiva.
+- Red caída, timeout y 503 conservan los registros para reintento. Un conflicto/rechazo permanece visible y no se borra después de tres intentos.
+- Un 401 pausa el envío hasta iniciar sesión y reanudar. No borrar el perfil del navegador para solucionar la cola.
+- `Exportar copia local` descarga los comandos y recibos retenidos; exportar no libera pendientes. La restauración administrativa completa es una fase posterior.
+- El SW registra automáticamente el shell y assets públicos compilados. No cachea APIs, administración, sesiones ni reportes.
+- Para actualizar desde una versión anterior, cerrar todas las pestañas/ventanas de SCA-QR y abrir de nuevo. No se fuerza una recarga durante una lectura.
 
-### 1. Marcación Exitosa (Verde)
-- Abre `/ingreso`
-- Click en "Búsqueda Manual" → selecciona un estudiante
-- Verás el estado **SUCCESS** con datos del alumno, foto, grado, sección, turno
-- Sonido agudo ascendente
+El piloto configura **un lector por terminal**. Un frame de teclado válido puede ser `N1|72345678|SCAQR723` + Enter; sin prefijo se admite solo si hay un lector configurado. Las firmas son de demostración: ocho caracteres no prueban autenticidad. Varios HID simultáneos pueden intercalar caracteres y requieren validación/adaptador por dispositivo. El botón de prueba de hardware solo produce sonido y respuesta visual, sin crear asistencia.
 
-### 2. Anti-Suplantación / Ráfaga (Amarillo)
-- Selecciona 2 estudiantes en menos de 2.5 segundos
-- El segundo marcará **WARNING** con mensaje "Ráfaga detectada"
-- Sonido de alerta medio
-
-### 3. Modo Offline
-- Abre DevTools → Network → Throttling → **Offline**
-- Intenta marcar un estudiante
-- Verás badge "MODO OFFLINE" + badge "📦 1 pendiente"
-- Mensaje: "Registro guardado localmente"
-- Vuelve a **Online** desde DevTools
-- Automáticamente sincroniza y muestra "✓ Sincronizados N registros"
-
-### 4. QR Inválido (Rojo)
-- Click en Búsqueda Manual y escribe cualquier texto no listado
-- Verás estado **ERROR** con sonido grave
-- No se guarda en cola offline
-
-### 5. Estudiante Suspendido
-- Selecciona a Sebastián Rojas (DNI 74567890)
-- Aparecerá badge rojo "SUSPENDED" sobre la foto
-
-### 6. Doble Marcación
-- Marca al mismo estudiante 2 veces en menos de 1 minuto
-- Verás **WARNING** con mensaje "ya marcó entrada hace menos de 1 minuto"
-
-## 🏗️ Arquitectura
-
-```
-src/
-├── app/
-│   ├── page.tsx                    # Landing con info
-│   ├── ingreso/page.tsx            # Terminal de portería
-│   ├── api/attendances/scan/       # Endpoint POST con mock
-│   └── api/health/                 # Health check
-├── components/
-│   ├── ScannerInput.tsx            # Capturador HID (sr-only)
-│   ├── StudentDisplay.tsx          # Tarjeta visual del alumno
-│   ├── ConnectivityBadge.tsx       # Estado red + cola pendiente
-│   ├── RecentScans.tsx             # Últimas 5 marcaciones
-│   └── ManualSearch.tsx            # Búsqueda por DNI/nombre
-├── lib/
-│   ├── audio.ts                    # SoundManager (WAV precargados)
-│   ├── offlineQueue.ts             # IndexedDB con UUID + retry
-│   ├── qrValidator.ts              # Parse + verify signature
-│   ├── api.ts                      # Cliente HTTP tipado
-│   ├── constants.ts                # Magic numbers centralizados
-│   ├── serviceWorkerRegistration.ts
-│   └── mockData.ts                 # 8 estudiantes demo
-└── types/
-    └── attendance.ts               # Tipos compartidos
-
-public/
-├── manifest.json                   # PWA manifest
-├── sw.js                           # Service Worker
-├── icons/                          # Iconos SVG
-└── sounds/                         # success/warning/error.wav
-```
-
-## 🔑 Mejoras vs Plan Original
-
-| Característica | Plan Original | Esta Versión |
-|---|---|---|
-| Service Worker | ❌ No existe | ✅ Precache + network-first |
-| Manifest | Básico | Con shortcuts + orientation |
-| Cola offline | Sin UUID, rompe si falla | Con UUID, retry, dead-letter |
-| Idempotencia | ❌ Duplicados posibles | ✅ Map en servidor |
-| Validación QR | Ninguna | Parse + verify signature |
-| Búsqueda manual | ❌ | ✅ Fallback completo |
-| Tipos TypeScript | Parciales | ✅ Estrictos en todo |
-| Accesibilidad | `opacity-0` + `aria-hidden` | `sr-only` correcto |
-| Idempotencia servidor | ❌ | ✅ Cache 24h |
-| Modo oscuro | OK | Refinado con glass morphism |
-
-## 🛠️ Stack
-
-- **Next.js 14** (App Router)
-- **TypeScript** (strict)
-- **Tailwind CSS** (utility-first)
-- **idb** (IndexedDB wrapper)
-- **Zod** (validación de payloads)
-- **Service Worker** nativo (sin Workbox para demo simple)
-
-## 📱 Cómo Probar como PWA
-
-1. Ejecuta `npm run dev`
-2. Abre Chrome/Edge en `http://localhost:3000/ingreso`
-3. Click en el ícono de "instalar" (⊕) en la barra de direcciones
-4. La app se abre en modo **fullscreen** sin barra del navegador
-5. Desconecta el Wi-Fi → la app sigue funcionando
-6. Reconecta → sincroniza automáticamente
-
-> ⚠️ El Service Worker solo funciona en `https://` o `localhost`
-
-## 🔊 Personalizar Sonidos
-
-Los tonos se generan sintéticamente. Para reemplazarlos:
-1. Coloca tus MP3/WAV en `public/sounds/`
-2. Actualiza las rutas en `src/lib/audio.ts`
-
-## 🐛 Debug
+## Verificación
 
 ```bash
-# Ver la cola offline
-# DevTools → Application → IndexedDB → SCA_OFFLINE_DB
-
-# Simular offline
-# DevTools → Network → Throttling → Offline
-
-# Ver el Service Worker
-# DevTools → Application → Service Workers
-
-# Logs de la API mock
-# Terminal donde corre `npm run dev`
+npm run lint
+npm run typecheck
+npm run test:run
+npm run build
+npm run test:e2e
 ```
 
-## 📦 Build de Producción
+Para E2E se necesita Chromium: `npx playwright install chromium` si no está instalado. La suite usa el build de producción, un puerto local exclusivo y un secreto efímero. No requiere Supabase, correo ni servicios de pago.
+
+Para ejecutar el build manualmente:
 
 ```bash
 npm run build
 npm start
 ```
 
-## 🚧 Para Llevar a Producción
+No ejecutar `dev` y `build` sobre la misma carpeta `.next` al mismo tiempo. CI ejecuta validaciones, auditoría de dependencias de producción y pruebas de navegador; no despliega a VPS ni publica la aplicación.
 
-Pendiente (fuera del demo):
-- [ ] Reemplazar mock data con BD real (PostgreSQL/Prisma)
-- [ ] Implementar firma RSA real para QRs (clave pública del colegio)
-- [ ] Autenticación de porteros (NextAuth + JWT)
-- [ ] HTTPS obligatorio
-- [ ] Certificados para Service Worker
-- [ ] Sentry/PostHog para errores y métricas
-- [ ] Tests E2E con Playwright
-- [ ] CI/CD (GitHub Actions)
-- [ ] Reportes de asistencia (PDF/Excel)
-- [ ] App móvil nativa (opcional, Capacitor)
+## Stack actual
+
+- Next.js 16 y React 19; TypeScript y Tailwind.
+- IndexedDB mediante `idb`, esquema único con migraciones conservadoras.
+- Zod 4 para contratos y ACK vinculados al comando con SHA-256.
+- JWT con `jose`; credenciales/usuarios ficticios aislados por el modo demo.
+- Vitest, fake-indexeddb y Playwright.
+
+## Alcance pendiente
+
+PostgreSQL transaccional, usuarios/roles reales, RLS y autorización de terminales; QR JWS revocable; calendario/entrada-salida escolar; exportación completa de reportes; backups/restauración, privacidad institucional y hardware real.
+
+El PDF demo conserva su límite de 80 filas y el correo está deshabilitado por defecto. Redis es un adaptador opcional no requerido ni validado para esta entrega. Los planes cloud gratuitos se evaluarán con sus cuotas antes de desplegar; no se ha contratado ni creado ningún servicio.
+
+Aplicar controles alineados con ISO 27001/27002 no equivale a certificación ni a un SGSI institucional completo. Consulta el registro de riesgos, evidencias y procedimientos de la entrega.

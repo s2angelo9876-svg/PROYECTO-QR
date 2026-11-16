@@ -1,6 +1,8 @@
 # SDD — Rediseño integral gratuito de SCA-QR
 
-Versión 1.1 · Segunda revisión, 16 de noviembre de 2026 (America/Lima) · Estado: diseño propuesto, implementación pendiente.
+Versión 1.2 · 16 de noviembre de 2026 (America/Lima) · Estado: implementación técnica inicial de fase 1; fases institucionales pendientes.
+
+Seguimiento de código y controles alineados con ISO: [IMPLEMENTACION_FASE_1.md](IMPLEMENTACION_FASE_1.md). Los resultados del reanálisis siguiente corresponden al baseline indicado, no a una certificación del código nuevo.
 
 SDD significa aquí **Software Design Document / Documento de Diseño de Software**. Este documento especifica el resultado deseado; no afirma que esas capacidades ya existan. Diagnóstico y evidencias: [ANALISIS_INTEGRAL.md](ANALISIS_INTEGRAL.md).
 
@@ -390,7 +392,7 @@ Runbooks mínimos: servidor caído, proveedor pausado, cuota agotada, terminal p
 
 CI propuesta: Node 24 LTS fijado a una versión mantenida, tipos compatibles y gestores alineados; npm ci sin flags de ignorar peers después de corregir dependencias; typecheck, lint, unit, integración con Postgres, build estático y Playwright smoke. El resultado actual con dependencias retenidas no demuestra npm ci limpio: el dry-run falla. Declarar Playwright y configuración en el proyecto cuando se implementen E2E, sin depender de la instalación global del entorno. E2E completo y carga pueden ejecutarse localmente para respetar cuota.
 
-Separar validación y despliegue; no mantener el job SSH a VPS como default gratuito. Si hay jobs distintos, descargar el artefacto producido por el build y verificar checksum/manifiesto antes de desplegar. El bundle estático no debe contener mocks ni datos privados. Publicación atómica con assets coherentes y rollback compatible; no copiar `.next` incompleto sobre una instancia activa. PRs no confiables no reciben secretos. La acción actual es un commit de documentación, no publicación de aplicación ni activación de esa pipeline.
+Separar validación y despliegue; no mantener el job SSH a VPS como default gratuito. Si hay jobs distintos, descargar el artefacto producido por el build y verificar checksum/manifiesto antes de desplegar. El bundle estático no debe contener mocks ni datos privados. Publicación atómica con assets coherentes y rollback compatible; no copiar `.next` incompleto sobre una instancia activa. PRs no confiables no reciben secretos. Las entregas de código se validan sin activar publicación automática; su estado se registra en el documento de implementación.
 
 Salida a piloto: F01–F07, F10, F23, F24 y F30 cerrados con pruebas; dependencias mantenidas y triage F28; auth/RBAC/RLS/RPC verificados; reglas aprobadas; backup restaurado y reconciliado; cuotas y condiciones gratuitas verificadas; una estación y datos sintéticos primero. Reportes completos y salud dinámica deben verificarse antes de usarlos operativamente. Después, piloto controlado de una entrada con reconciliación diaria y planilla paralela durante cinco jornadas. Ampliar solo sin discrepancias sin explicar, sin pérdida de cola y con capacidad medida. La aprobación institucional para menores es independiente de que los tests pasen.
 
@@ -475,4 +477,4 @@ La decisión final registra términos vigentes, cuenta y región. Las pruebas de
 
 Primer PR: corregir redirect inseguro, registro SW y política de caché, unificar IndexedDB con migraciones que preserven datos y añadir regresiones del build, login y logout. Segundo PR: outbox para toda captura y UI sin confirmación prematura. Tercero: persistencia transaccional, hash/idempotencia y permisos reales. La actualización de dependencias y el aislamiento del modo demo se trabajan desde el inicio, antes de cualquier exposición de datos reales. Esta secuencia no despliega parcialmente un sistema inseguro a producción.
 
-Cada PR declara requisito/hallazgo cerrado, pruebas positivas/negativas ejecutadas, compatibilidad de datos pendientes y rollback. No cerrar un hallazgo porque TypeScript o una prueba de helpers pase. Mantener separados el estado de desarrollo, el piloto y la aceptación institucional. El cierre de este documento consiste en un diseño versionado y revisable; implementar el SDD, desplegar y operar el colegio son trabajos posteriores.
+Cada PR declara requisito/hallazgo cerrado, pruebas positivas/negativas ejecutadas, compatibilidad de datos pendientes y rollback. No cerrar un hallazgo porque TypeScript o una prueba de helpers pase. Mantener separados el estado de desarrollo, el piloto y la aceptación institucional. Esta especificación no declara implementado el SDD completo: consultar el documento de entrega para distinguir código validado, funcionalidades pendientes y aceptación institucional.

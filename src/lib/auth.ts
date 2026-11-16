@@ -1,60 +1,22 @@
 // src/lib/auth.ts
 // Autenticación con JWT para el panel de administración
-import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
 import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET ||
-    'sca-qr-dev-secret-CHANGE-IN-PRODUCTION-min-32-characters-long',
-);
+import { verifyToken } from './authToken';
+export { signToken, verifyToken } from './authToken';
+export type { AdminUser, AdminTokenPayload } from './authToken';
+import type { AdminUser } from './authToken';
+
 const COOKIE_NAME = 'sca_admin_token';
 const TOKEN_EXPIRY_HOURS = 12;
 
-export interface AdminUser {
-  id: string;
-  username: string;
-  role: 'admin' | 'director' | 'secretary';
-  fullName: string;
-  email?: string;
-}
-
-export interface AdminTokenPayload extends JWTPayload {
-  user: AdminUser;
-}
-
-// Hash y verificación de passwords
 export async function hashPassword(plain: string): Promise<string> {
   return bcrypt.hash(plain, 10);
 }
-
-export async function verifyPassword(
-  plain: string,
-  hash: string,
-): Promise<boolean> {
+export async function verifyPassword(plain: string, hash: string): Promise<boolean> {
   return bcrypt.compare(plain, hash);
-}
-
-// Generar JWT
-export async function signToken(user: AdminUser): Promise<string> {
-  return new SignJWT({ user })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime(`${TOKEN_EXPIRY_HOURS}h`)
-    .sign(JWT_SECRET);
-}
-
-// Verificar JWT
-export async function verifyToken(
-  token: string,
-): Promise<AdminTokenPayload | null> {
-  try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
-    return payload as AdminTokenPayload;
-  } catch {
-    return null;
-  }
 }
 
 // Obtener usuario actual desde las cookies (server components)

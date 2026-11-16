@@ -1,83 +1,59 @@
-// Service Worker - SCA-QR Demo
-const CACHE_VERSION = 'sca-qr-v1';
-const RUNTIME_CACHE = 'sca-qr-runtime-v1';
-const PRECACHE_URLS = [
-  '/ingreso',
-  '/sounds/success.wav',
-  '/sounds/warning.wav',
-  '/sounds/error.wav',
-  '/icons/icon-192.svg',
-  '/icons/icon-512.svg',
+/* Public app shell only. Credentials, API responses and admin pages never enter Cache Storage. */
+const CACHE_NAME = 'sca-qr-public-v2';
+const SHELL = '/ingreso';
+const PUBLIC_ASSETS = [
+  '/manifest.json', '/icons/icon-192.svg', '/icons/icon-512.svg',
+  '/sounds/success.wav', '/sounds/warning.wav', '/sounds/error.wav',
 ];
+const isAsset = (url) => !url.search && (
+  url.pathname.startsWith('/_next/static/') || PUBLIC_ASSETS.includes(url.pathname)
+);
+const isPublic = (res) => res.ok && !/private|no-store/i.test(res.headers.get('Cache-Control') || '');
 
 self.addEventListener('install', (event) => {
-  console.log('[SW] Instalando...');
-  event.waitUntil(
-    caches.open(CACHE_VERSION).then(async (cache) => {
-      try {
-        await cache.addAll(PRECACHE_URLS);
-      } catch (err) {
-        console.warn('[SW] Algunos assets no se pudieron pre-cachear:', err);
-      }
-    }).then(() => self.skipWaiting())
-  );
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    const shell = await fetch(SHELL, { cache: 'reload' });
+    if (!isPublic(shell)) throw new Error('Public shell is unavailable');
+    const html = await shell.clone().text();
+    await cache.put(SHELL, shell);
+    // Include the actual compiled JS/CSS, not just an HTML page that cannot boot offline.
+    const compiledAssets = [...new Set(html.match(/\/_next\/static\/[^\s"'<>\\]+/g) || [])];
+    await cache.addAll([...PUBLIC_ASSETS, ...compiledAssets]);
+    // No skipWaiting: a new version must not replace an active capture session.
+  })());
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activando...');
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((k) => k !== CACHE_VERSION && k !== RUNTIME_CACHE)
-          .map((k) => {
-            console.log('[SW] Eliminando cache viejo:', k);
-            return caches.delete(k);
-          })
-      )
-    ).then(() => self.clients.claim())
-  );
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter((key) => key.startsWith('sca-qr-') && key !== CACHE_NAME)
+      .map((key) => caches.delete(key)));
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  if (request.method !== 'GET') return;
-  if (new URL(request.url).origin !== location.origin) return;
-
-  // Network-first para navegación
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((res) => {
-          const clone = res.clone();
-          caches.open(RUNTIME_CACHE).then((c) => c.put(request, clone));
-          return res;
-        })
-        .catch(() =>
-          caches.match(request).then((cached) => cached || caches.match('/ingreso'))
-        )
-    );
-    return;
-  }
-
-  // Cache-first para assets estáticos
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request).then((res) => {
-        if (res.ok) {
-          const clone = res.clone();
-          caches.open(RUNTIME_CACHE).then((c) => c.put(request, clone));
-        }
-        return res;
-      }).catch(() => cached);
-    })
-  );
-});
-
-// Mensajes desde la app
-self.addEventListener('message', (event) => {
-  if (event.data?.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
+  const url = new URL(request.url);
+  if (request.method !== 'GET' || url.origin !== self.location.origin) return;
+  // Explicit allowlist. This also excludes RSC/query responses and all /api and /admin requests.
+  const shellNavigation = request.mode === 'navigate' && url.pathname === SHELL && !url.search;
+  if (!shellNavigation && !isAsset(url)) return;
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    if (!shellNavigation) {
+      const hit = await cache.match(request);
+      if (hit) return hit;
+    }
+    try {
+      const res = await fetch(request);
+      if (isPublic(res)) await cache.put(shellNavigation ? SHELL : request, res.clone());
+      return res;
+    } catch (error) {
+      const hit = await cache.match(shellNavigation ? SHELL : request);
+      if (hit) return hit;
+      throw error;
+    }
+  })());
 });

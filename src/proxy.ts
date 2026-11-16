@@ -1,15 +1,11 @@
-// src/middleware.ts
+// src/proxy.ts
 // Protege las rutas /admin/* verificando el JWT
 import { NextRequest, NextResponse } from 'next/server';
-import { jwtVerify } from 'jose';
+import { verifyToken } from '@/lib/authToken';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET ||
-    'sca-qr-dev-secret-CHANGE-IN-PRODUCTION-min-32-characters-long',
-);
 const COOKIE_NAME = 'sca_admin_token';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Solo proteger /admin/* (excepto /admin/login)
@@ -25,7 +21,7 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    await jwtVerify(token, JWT_SECRET);
+    if (!await verifyToken(token)) throw new Error('UNAUTHORIZED');
     return NextResponse.next();
   } catch {
     const loginUrl = new URL('/admin/login', request.url);

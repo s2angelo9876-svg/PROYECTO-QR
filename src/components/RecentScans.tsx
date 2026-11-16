@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getRecentScans } from '@/lib/offlineQueue';
+import { getRecentScans, OUTBOX_EVENT } from '@/lib/offlineQueue';
 import type { RecentScan } from '@/types/attendance';
 
 const STATUS_CHIPS = {
@@ -15,11 +15,11 @@ export default function RecentScans() {
 
   useEffect(() => {
     const load = () => {
-      getRecentScans().then(setScans);
+      void getRecentScans().then(setScans).catch(() => window.dispatchEvent(new Event('sca-storage-error')));
     };
     load();
-    const interval = setInterval(load, 2500);
-    return () => clearInterval(interval);
+    window.addEventListener(OUTBOX_EVENT, load);
+    return () => window.removeEventListener(OUTBOX_EVENT, load);
   }, []);
 
   if (scans.length === 0) return null;

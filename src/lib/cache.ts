@@ -1,3 +1,4 @@
+import Redis from 'ioredis';
 // src/lib/cache.ts
 // Capa de abstracción de cache. Por defecto usa memoria local.
 // Si se define REDIS_URL, usa Redis (Upstash, Redis Cloud, etc.)
@@ -82,7 +83,7 @@ class MemoryCache implements CacheInterface {
 
 class RedisCache implements CacheInterface {
   backend = 'redis' as const;
-  private client: any = null;
+  private client: Redis | null = null;
   private connecting: Promise<void> | null = null;
 
   constructor(private redisUrl: string) {
@@ -91,12 +92,6 @@ class RedisCache implements CacheInterface {
 
   private async connect(): Promise<void> {
     try {
-      // Import dinámico con variable string: webpack no puede analizar
-      // esto y deja el require para runtime, evitando errores de build
-      // si ioredis no se usa.
-      const moduleName = 'ioredis';
-      const imported: any = await import(moduleName);
-      const Redis = imported.default ?? imported;
       this.client = new Redis(this.redisUrl, {
         maxRetriesPerRequest: 2,
         enableReadyCheck: true,
@@ -105,19 +100,19 @@ class RedisCache implements CacheInterface {
       await this.client.connect();
       console.log('[Cache] Conectado a Redis');
     } catch (err) {
-      console.error('[Cache] Error conectando a Redis:', err);
+      console.error('[Cache] REDIS_CONNECTION_FAILED');
       this.client = null;
     }
   }
 
   private async ensureConnected(): Promise<boolean> {
-    if (this.client?.status === 'ready') return true;
+    // The connection promise may change client.status; read it only after that transition.
     if (this.connecting) await this.connecting;
     return this.client?.status === 'ready';
   }
 
   async get<T>(key: string): Promise<T | null> {
-    if (!(await this.ensureConnected())) return null;
+    if (!(await this.ensureConnected()) || !this.client) return null;
     const value = await this.client.get(key);
     if (!value) return null;
     try {
@@ -128,8 +123,9 @@ class RedisCache implements CacheInterface {
   }
 
   async set<T>(key: string, value: T, ttlSeconds?: number): Promise<void> {
-    if (!(await this.ensureConnected())) return;
+    if (!(await this.ensureConnected()) || !this.client) return;
     const stringValue = JSON.stringify(value);
+    if (stringValue === undefined) return;
     if (ttlSeconds) {
       await this.client.set(key, stringValue, 'EX', ttlSeconds);
     } else {
@@ -138,18 +134,18 @@ class RedisCache implements CacheInterface {
   }
 
   async delete(key: string): Promise<void> {
-    if (!(await this.ensureConnected())) return;
+    if (!(await this.ensureConnected()) || !this.client) return;
     await this.client.del(key);
   }
 
   async has(key: string): Promise<boolean> {
-    if (!(await this.ensureConnected())) return false;
+    if (!(await this.ensureConnected()) || !this.client) return false;
     const exists = await this.client.exists(key);
     return exists === 1;
   }
 
   async clear(): Promise<void> {
-    if (!(await this.ensureConnected())) return;
+    if (!(await this.ensureConnected()) || !this.client) return;
     await this.client.flushdb();
   }
 
@@ -171,7 +167,7 @@ export function getCache(): CacheInterface {
   const redisUrl = process.env.REDIS_URL;
 
   if (redisUrl && redisUrl.length > 0) {
-    console.log('[Cache] Inicializando con Redis:', redisUrl.replace(/:[^:@]+@/, ':***@'));
+    console.log('[Cache] Redis configurado');
     cacheInstance = new RedisCache(redisUrl);
   } else {
     console.log('[Cache] Inicializando con memoria local (sin Redis)');
