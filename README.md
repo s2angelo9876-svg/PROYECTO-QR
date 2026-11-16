@@ -61,6 +61,10 @@ No ejecutar `dev` y `build` sobre la misma carpeta `.next` al mismo tiempo. CI e
 - JWT con `jose`; credenciales/usuarios ficticios aislados por el modo demo.
 - Vitest, fake-indexeddb y Playwright.
 
+## Skills de diseño
+
+Disponibles en `.agents/skills`: Unslop, Impeccable y `emil-design-eng`, con Playwright como herramienta de verificación. Consulta [su función y procedencia](docs/SKILLS_DISENO.md) antes de trabajar en el dashboard.
+
 ## Alcance pendiente
 
 PostgreSQL transaccional, usuarios/roles reales, RLS y autorización de terminales; QR JWS revocable; calendario/entrada-salida escolar; exportación completa de reportes; backups/restauración, privacidad institucional y hardware real.
