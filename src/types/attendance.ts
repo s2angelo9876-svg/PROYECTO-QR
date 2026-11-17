@@ -1,8 +1,8 @@
-export type AttendanceStatus = 'ON_TIME' | 'LATE' | 'EARLY_LEAVE' | 'EXIT';
-export type ScanStatus = 'SUCCESS' | 'WARNING' | 'ERROR';
-export type SoundType = 'success' | 'warning' | 'error';
-export type Shift = 'MORNING' | 'AFTERNOON' | 'EVENING';
-export type StudentStatus = 'ACTIVE' | 'SUSPENDED' | 'GRADUATED';
+export type AttendanceStatus = "ON_TIME" | "LATE" | "EARLY_LEAVE" | "EXIT";
+export type ScanStatus = "SUCCESS" | "WARNING" | "ERROR";
+export type SoundType = "success" | "warning" | "error";
+export type Shift = "MORNING" | "AFTERNOON" | "EVENING";
+export type StudentStatus = "ACTIVE" | "SUSPENDED" | "GRADUATED";
 
 export interface Student {
   id: string;
@@ -41,10 +41,23 @@ export interface PendingScan {
   terminalId?: string;
   scannerId?: string;
   entranceId?: string;
-  state?: 'PENDING' | 'SENDING' | 'RETRY' | 'BLOCKED_AUTH' | 'REVIEW' | 'REJECTED' | 'ACKED';
+  state?:
+    | "PENDING"
+    | "SENDING"
+    | "RETRY"
+    | "BLOCKED_AUTH"
+    | "REVIEW"
+    | "REJECTED"
+    | "ACKED";
   nextAttemptAt?: number;
   payloadHash?: string;
   acknowledgement?: ApiScanSuccess;
+  direction?: "ENTRY" | "EXIT";
+  terminalPermit?: string;
+  clockOffsetMs?: number;
+  serverReceipt?: { status: number; body: Record<string, unknown> };
+  resolvedAt?: string;
+  resolution?: { payload: Record<string, unknown>; receipt: string };
 }
 
 export interface RecentScan {
@@ -64,6 +77,9 @@ export interface ApiScanRequest {
   entrance_id?: string;
   offline_timestamp?: string;
   terminal_id?: string;
+  direction?: "ENTRY" | "EXIT";
+  terminal_permit?: string;
+  clock_offset_ms?: number;
 }
 
 export interface ApiScanSuccess {
@@ -77,12 +93,23 @@ export interface ApiScanSuccess {
   idempotent?: boolean;
   client_scan_id: string;
   payload_hash: string;
-  persistence: 'memory-demo' | 'durable';
+  persistence: "memory-demo" | "durable";
+  receipt?: string;
+  credential_id?: string;
 }
 
 export interface ApiScanError {
   ok: false;
-  code: 'INVALID_QR' | 'EXPIRED_QR' | 'STUDENT_NOT_FOUND' | 'DUPLICATE_SCAN' | 'UNAUTHORIZED' | 'INTERNAL' | 'IDEMPOTENCY_KEY_REUSED' | 'INVALID_INPUT' | 'DEMO_DISABLED';
+  code:
+    | "INVALID_QR"
+    | "EXPIRED_QR"
+    | "STUDENT_NOT_FOUND"
+    | "DUPLICATE_SCAN"
+    | "UNAUTHORIZED"
+    | "INTERNAL"
+    | "IDEMPOTENCY_KEY_REUSED"
+    | "INVALID_INPUT"
+    | "DEMO_DISABLED";
   message: string;
 }
 
@@ -91,15 +118,15 @@ export type ApiScanResponse = ApiScanSuccess | ApiScanError;
 // ============ Multi-Scanner Types ============
 
 export interface ScannerConfig {
-  id: string;             // 'A1', 'A2', 'A3', 'A4', 'N1', 'S1', etc.
-  label: string;          // 'Entrada Principal', 'Puerta Lateral', etc.
-  position: 'left' | 'center' | 'right' | 'special'; // Ubicación física
-  prefix: string;         // Prefijo que envía el lector: 'A1|', 'A2|', etc.
+  id: string; // 'A1', 'A2', 'A3', 'A4', 'N1', 'S1', etc.
+  label: string; // 'Entrada Principal', 'Puerta Lateral', etc.
+  position: "left" | "center" | "right" | "special"; // Ubicación física
+  prefix: string; // Prefijo que envía el lector: 'A1|', 'A2|', etc.
 }
 
 export interface EntranceConfig {
-  id: string;             // 'NORTE', 'SUR', 'PRINCIPAL', etc.
-  label: string;          // 'Entrada Principal', 'Entrada Norte'
+  id: string; // 'NORTE', 'SUR', 'PRINCIPAL', etc.
+  label: string; // 'Entrada Principal', 'Entrada Norte'
   scanners: ScannerConfig[];
 }
 
@@ -114,7 +141,7 @@ export interface MultiScanEvent {
 export interface ScannerStatus {
   id: string;
   label: string;
-  position: ScannerConfig['position'];
+  position: ScannerConfig["position"];
   lastScanAt: number | null;
   lastStudentName: string | null;
   lastStatus: ScanStatus | null;

@@ -1,0 +1,9 @@
+{
+  "verifiedAt": "2026-11-17T00:03:05.206Z",
+  "freshCluster": true,
+  "migrations": 8,
+  "runtimeRole": "sca_runtime",
+  "unscopedStudents": "0",
+  "ownerOutsideRuntime": true,
+  "bootstrapRequiresPasswordChange": true
+}

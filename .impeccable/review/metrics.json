@@ -1,0 +1,134 @@
+{
+  "capturedAt": "2026-11-17T00:30:33.097Z",
+  "synthetic": true,
+  "base": "http://localhost:3102",
+  "metrics": [
+    {
+      "name": "login",
+      "width": 1440,
+      "documentWidth": 1440,
+      "title": "SCA-QR · Asistencia escolar",
+      "focus": null,
+      "focusLabel": "Usuario",
+      "errorVisible": false,
+      "font": "\"Public Sans Variable\", \"Public Sans\", sans-serif"
+    },
+    {
+      "name": "desktop-dashboard",
+      "width": 1440,
+      "documentWidth": 1440,
+      "title": "SCA-QR · Asistencia escolar",
+      "focus": null,
+      "focusLabel": null,
+      "errorVisible": false,
+      "font": "\"Public Sans Variable\", \"Public Sans\", sans-serif"
+    },
+    {
+      "name": "desktop-students",
+      "width": 1440,
+      "documentWidth": 1440,
+      "title": "SCA-QR · Asistencia escolar",
+      "focus": null,
+      "focusLabel": null,
+      "listTop": 247.1875,
+      "errorVisible": false,
+      "font": "\"Public Sans Variable\", \"Public Sans\", sans-serif"
+    },
+    {
+      "name": "desktop-student-form",
+      "width": 1440,
+      "documentWidth": 1440,
+      "title": "SCA-QR · Asistencia escolar",
+      "focus": null,
+      "focusLabel": "Código institucional",
+      "editorTop": 247.1875,
+      "listTop": 247.1875,
+      "errorVisible": false,
+      "font": "\"Public Sans Variable\", \"Public Sans\", sans-serif"
+    },
+    {
+      "name": "desktop-form-focus",
+      "createFocus": true,
+      "createReturn": true,
+      "editFocus": true,
+      "editReturn": true
+    },
+    {
+      "name": "desktop-terminal",
+      "width": 1440,
+      "documentWidth": 1440,
+      "title": "SCA-QR · Asistencia escolar",
+      "focus": null,
+      "focusLabel": null,
+      "errorVisible": false,
+      "font": "\"Public Sans Variable\", \"Public Sans\", sans-serif"
+    },
+    {
+      "name": "mobile-dashboard",
+      "width": 390,
+      "documentWidth": 390,
+      "title": "SCA-QR · Asistencia escolar",
+      "focus": null,
+      "focusLabel": null,
+      "errorVisible": false,
+      "font": "\"Public Sans Variable\", \"Public Sans\", sans-serif"
+    },
+    {
+      "name": "mobile-menu",
+      "width": 390,
+      "documentWidth": 390,
+      "title": "SCA-QR · Asistencia escolar",
+      "focus": "Cerrar menú",
+      "focusLabel": null,
+      "errorVisible": false,
+      "font": "\"Public Sans Variable\", \"Public Sans\", sans-serif"
+    },
+    {
+      "name": "mobile-keyboard",
+      "focusInsideDrawer": true,
+      "returnedFocus": "Abrir menú"
+    },
+    {
+      "name": "mobile-students",
+      "width": 390,
+      "documentWidth": 390,
+      "title": "SCA-QR · Asistencia escolar",
+      "focus": null,
+      "focusLabel": null,
+      "listTop": 292.625,
+      "errorVisible": false,
+      "font": "\"Public Sans Variable\", \"Public Sans\", sans-serif"
+    },
+    {
+      "name": "mobile-student-form",
+      "width": 390,
+      "documentWidth": 390,
+      "title": "SCA-QR · Asistencia escolar",
+      "focus": null,
+      "focusLabel": "Código institucional",
+      "editorTop": -0.375,
+      "listTop": 652.375,
+      "errorVisible": false,
+      "font": "\"Public Sans Variable\", \"Public Sans\", sans-serif"
+    },
+    {
+      "name": "mobile-form-focus",
+      "createFocus": true,
+      "createReturn": true,
+      "editFocus": true,
+      "editReturn": true,
+      "editorBeforeList": true
+    },
+    {
+      "name": "mobile-terminal",
+      "width": 390,
+      "documentWidth": 390,
+      "title": "SCA-QR · Asistencia escolar",
+      "focus": null,
+      "focusLabel": null,
+      "errorVisible": false,
+      "font": "\"Public Sans Variable\", \"Public Sans\", sans-serif"
+    }
+  ],
+  "errors": []
+}

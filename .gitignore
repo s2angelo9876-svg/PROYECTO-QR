@@ -28,3 +28,6 @@ next-env.d.ts
 graphify-out/
 playwright-report/
 test-results/
+var/
+.impeccable-engine/
+backups/

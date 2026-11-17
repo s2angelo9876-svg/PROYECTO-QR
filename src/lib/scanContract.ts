@@ -1,8 +1,8 @@
-import { z } from 'zod';
-import type { ApiScanRequest } from '@/types/attendance';
+import { z } from "zod";
+import type { ApiScanRequest } from "@/types/attendance";
 
 export const ScanCommandSchema = z.object({
-  qr_code: z.string().min(1).max(200),
+  qr_code: z.string().min(1).max(1024),
   qr_signature: z.string().min(1).max(500),
   is_burst: z.boolean(),
   client_scan_id: z.uuid(),
@@ -10,32 +10,72 @@ export const ScanCommandSchema = z.object({
   scanner_id: z.string().min(1).max(100).optional(),
   entrance_id: z.string().min(1).max(100).optional(),
   offline_timestamp: z.iso.datetime().optional(),
+  direction: z.enum(["ENTRY", "EXIT"]).optional(),
+  terminal_permit: z.string().max(2048).optional(),
+  clock_offset_ms: z.number().int().min(-86400000).max(86400000).optional(),
 });
 
 export const StudentSchema = z.object({
-  id: z.string(), dni: z.string(), firstName: z.string(), lastName: z.string(),
-  fullName: z.string(), grade: z.string(), section: z.string(),
-  shift: z.enum(['MORNING', 'AFTERNOON', 'EVENING']),
-  photoUrl: z.string(), status: z.enum(['ACTIVE', 'SUSPENDED', 'GRADUATED']),
-  guardianName: z.string().optional(), guardianPhone: z.string().optional(),
+  id: z.string(),
+  dni: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
+  fullName: z.string(),
+  grade: z.string(),
+  section: z.string(),
+  shift: z.enum(["MORNING", "AFTERNOON", "EVENING"]),
+  photoUrl: z.string(),
+  status: z.enum(["ACTIVE", "SUSPENDED", "GRADUATED"]),
+  guardianName: z.string().optional(),
+  guardianPhone: z.string().optional(),
 });
 
 export const ScanAckSchema = z.object({
-  ok: z.literal(true), scan_id: z.uuid(), client_scan_id: z.uuid(),
+  ok: z.literal(true),
+  scan_id: z.uuid(),
+  client_scan_id: z.uuid(),
   payload_hash: z.string().regex(/^[a-f0-9]{64}$/),
-  persistence: z.enum(['memory-demo', 'durable']),
-  attendance_status: z.enum(['ON_TIME', 'LATE', 'EARLY_LEAVE', 'EXIT']),
-  is_burst: z.boolean(), student: StudentSchema, message: z.string(),
-  server_timestamp: z.iso.datetime(), idempotent: z.boolean().optional(),
+  persistence: z.enum(["memory-demo", "durable"]),
+  attendance_status: z.enum(["ON_TIME", "LATE", "EARLY_LEAVE", "EXIT"]),
+  is_burst: z.boolean(),
+  student: StudentSchema,
+  message: z.string(),
+  server_timestamp: z.iso.datetime(),
+  idempotent: z.boolean().optional(),
+  receipt: z.string().max(4096).optional(),
+  credential_id: z.uuid().optional(),
 });
 
-export async function hashScanCommand(command: ApiScanRequest): Promise<string> {
+export async function hashScanCommand(
+  command: ApiScanRequest,
+): Promise<string> {
   // Ordered tuple is the version-1 canonical representation. Optional fields are explicit nulls.
-  const bytes = new TextEncoder().encode(JSON.stringify([
-    1, command.client_scan_id, command.terminal_id ?? null,
-    command.scanner_id ?? null, command.entrance_id ?? null,
-    command.qr_code, command.qr_signature, command.is_burst, command.offline_timestamp ?? null,
-  ]));
-  const digest = await crypto.subtle.digest('SHA-256', bytes);
-  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+  const base = [
+    1,
+    command.client_scan_id,
+    command.terminal_id ?? null,
+    command.scanner_id ?? null,
+    command.entrance_id ?? null,
+    command.qr_code,
+    command.qr_signature,
+    command.is_burst,
+    command.offline_timestamp ?? null,
+  ];
+  if (
+    command.direction ||
+    command.terminal_permit ||
+    command.clock_offset_ms !== undefined
+  ) {
+    base[0] = 2;
+    base.push(
+      command.direction ?? null,
+      command.terminal_permit ?? null,
+      command.clock_offset_ms ?? null,
+    );
+  }
+  const bytes = new TextEncoder().encode(JSON.stringify(base));
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
 }

@@ -1,334 +1,341 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-
-interface Stats {
-  totalStudents: number;
-  present: number;
-  absent: number;
-  late: number;
-  attendanceRate: number;
-  totalScansToday: number;
-}
-
-interface TopLate {
-  studentId: string;
-  studentName: string;
-  grade: string;
-  count: number;
-}
-
-interface ScanByHour {
-  hour: string;
-  count: number;
-}
-
-interface DashboardData {
+"use client";
+import Link from "next/link";
+import {
+  CalendarDays,
+  ArrowUpRight,
+  Users,
+  UserCheck,
+  Clock3,
+  UserRoundMinus,
+  ScanLine,
+  ShieldCheck,
+} from "lucide-react";
+import {
+  PageHeading,
+  useResource,
+  ErrorNotice,
+  Loading,
+  Empty,
+  RefreshButton,
+  Badge,
+  MoreLink,
+  localDate,
+  localTime,
+} from "@/components/admin/ui";
+interface Overview {
+  summary: {
+    total: number;
+    present: number;
+    late: number;
+    absent: number;
+    pending: number;
+    justified: number;
+    nonTeaching: number;
+  };
   date: string;
-  stats: Stats;
-  scansByHour: ScanByHour[];
-  topLate: TopLate[];
+  schoolName: string;
+  review: number;
+  synthetic: boolean;
+  hourly: { hour: number; count: number }[];
+  recent: {
+    id: string;
+    student_name: string;
+    grade: string;
+    section: string;
+    occurred_at: string;
+    direction: string;
+    status: string;
+    disposition: string;
+    terminal_name: string;
+  }[];
+  terminals: {
+    id: string;
+    name: string;
+    direction: string;
+    enabled: boolean;
+  }[];
 }
-
-export default function AdminDashboard() {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchData = () => fetch('/api/admin/stats', { cache: 'no-store' })
-    .then(async (res) => {
-      const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error('No se pudieron cargar las estadísticas');
-      return json;
-    }).then((json) => { setData(json); setError(null); })
-    .catch(() => setError('Error de conexión'))
-    .finally(() => setLoading(false));
-
-  useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 30_000);
-    return () => clearInterval(interval);
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex items-center gap-3 text-slate-400 text-sm font-semibold">
-          <span className="w-3 h-3 rounded-full bg-sky-400 animate-ping" />
-          <span>Cargando estadísticas en tiempo real...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !data) {
-    return (
-      <div className="glass-card bg-rose-950/40 border border-rose-500/40 text-rose-200 rounded-3xl p-6 text-center max-w-lg mx-auto">
-        <p className="text-2xl mb-2">⚠️</p>
-        <p className="font-bold">{error || 'Sin datos disponibles'}</p>
-        <button
-          onClick={fetchData}
-          className="pressable mt-4 px-4 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 text-xs font-bold border border-rose-500/30"
-        >
-          Reintentar
-        </button>
-      </div>
-    );
-  }
-
-  const maxCount = Math.max(...data.scansByHour.map((h) => h.count), 1);
-
+function AttendanceChart({ hours }: { hours: Overview["hourly"] }) {
+  const firstHour = Math.min(6, ...hours.map((h) => Number(h.hour))),
+    lastHour = Math.max(19, ...hours.map((h) => Number(h.hour)));
+  const items = Array.from({ length: lastHour - firstHour + 1 }, (_, i) => ({
+    hour: i + firstHour,
+    count: Number(
+      hours.find((h) => Number(h.hour) === i + firstHour)?.count || 0,
+    ),
+  }));
+  const max = Math.max(4, ...items.map((i) => i.count)),
+    step = Math.ceil(max / 4),
+    total = items.reduce((n, i) => n + i.count, 0);
   return (
-    <div className="space-y-6 animate-scale-in">
-      {/* Header con Fecha y Botón PDF */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/10">
-        <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">
-            Dashboard de Asistencia
-          </h1>
-          <p className="text-slate-400 text-xs mt-1 capitalize">
-            {new Date(data.date).toLocaleDateString('es-PE', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Link
-            href="/ingreso"
-            className="pressable px-4 py-2 rounded-xl glass-card text-sky-300 hover:text-white border border-sky-500/30 text-xs font-bold flex items-center gap-2"
-          >
-            <span>📷</span>
-            <span>Terminal Portería</span>
-          </Link>
-
-          <a
-            href={`/api/reports/daily?date=${data.date}`}
-            target="_blank"
-            rel="noopener"
-            className="pressable bg-sky-500 hover:bg-sky-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-sky-500/20 transition-all"
-          >
-            <span>📄</span>
-            <span>Generar Reporte PDF</span>
-          </a>
-        </div>
-      </div>
-
-      {/* Stats Cards (4 columnas) */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard
-          label="Total Alumnos"
-          value={data.stats.totalStudents}
-          color="sky"
-          icon="👥"
-        />
-        <StatCard
-          label="Presentes Hoy"
-          value={data.stats.present}
-          color="emerald"
-          icon="✓"
-        />
-        <StatCard
-          label="Tardanzas"
-          value={data.stats.late}
-          color="amber"
-          icon="⏰"
-        />
-        <StatCard
-          label="Ausentes"
-          value={data.stats.absent}
-          color="rose"
-          icon="✕"
-        />
-      </div>
-
-      {/* Tasa de Asistencia con Barra de Progreso */}
-      <div className="glass-card rounded-3xl p-6 border border-white/10 shadow-xl">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h2 className="font-extrabold text-base text-white">Tasa General de Asistencia</h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Porcentaje de asistencia del alumnado registrado en el colegio hoy
-            </p>
-          </div>
-          <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-emerald-400 tabular-nums">
-            {data.stats.attendanceRate}%
-          </span>
-        </div>
-
-        <div className="h-3.5 bg-slate-900 rounded-full overflow-hidden p-0.5 border border-white/5">
-          <div
-            className="h-full bg-gradient-to-r from-sky-500 via-teal-400 to-emerald-400 rounded-full transition-all duration-700 shadow-[0_0_12px_rgba(56,189,248,0.4)]"
-            style={{ width: `${Math.min(data.stats.attendanceRate, 100)}%` }}
-          />
-        </div>
-
-        <div className="flex items-center justify-between text-xs text-slate-400 mt-3 pt-3 border-t border-white/5">
-          <span>
-            <strong className="text-white">{data.stats.present}</strong> de{' '}
-            <strong className="text-white">{data.stats.totalStudents}</strong> alumnos en el plantel
-          </span>
-          <span className="font-mono text-sky-400 font-bold tabular-nums">
-            {data.stats.totalScansToday} lecturas procesadas hoy
-          </span>
-        </div>
-      </div>
-
-      {/* Dos Columnas: Histograma de Horas y Top Tardanzas */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Marcaciones por Hora */}
-        <div className="glass-card rounded-3xl p-6 border border-white/10 shadow-xl flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-extrabold text-white text-base">Marcaciones por Hora</h2>
-              <span className="text-[10px] font-bold text-slate-400 bg-white/5 px-2 py-0.5 rounded-full uppercase">
-                Distribución
-              </span>
-            </div>
-
-            <div className="flex items-end gap-1.5 h-44 pt-4 pb-2 border-b border-white/5">
-              {data.scansByHour.map((h) => {
-                const heightPct = Math.max((h.count / maxCount) * 100, 3);
-                return (
-                  <div key={h.hour} className="flex-1 flex flex-col items-center gap-1 group">
-                    <div className="text-[10px] text-sky-300 font-mono tabular-nums opacity-0 group-hover:opacity-100 transition-opacity font-bold">
-                      {h.count > 0 ? h.count : ''}
-                    </div>
-                    <div
-                      className="w-full bg-sky-500/70 hover:bg-sky-400 rounded-t-lg transition-all duration-200"
-                      style={{
-                        height: `${heightPct}%`,
-                        opacity: h.count > 0 ? 1 : 0.2,
-                      }}
-                      title={`${h.hour}: ${h.count} marcaciones`}
-                    />
-                    <div className="text-[10px] text-slate-400 font-mono tabular-nums mt-1">
-                      {h.hour.split(':')[0]}h
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          <p className="text-[11px] text-slate-500 mt-3">
-            Picos de entrada registrados entre las 07:00 y las 08:00 AM
-          </p>
-        </div>
-
-        {/* Top Tardanzas */}
-        <div className="glass-card rounded-3xl p-6 border border-white/10 shadow-xl">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-extrabold text-white text-base">Alumnos con Tardanza Hoy</h2>
-            <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 uppercase">
-              {data.topLate.length} registrados
-            </span>
-          </div>
-
-          {data.topLate.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 text-xs">
-              <p className="text-2xl mb-1">🎉</p>
-              <p>No hay tardanzas registradas en la jornada de hoy</p>
-            </div>
-          ) : (
-            <ol className="space-y-2 max-h-52 overflow-y-auto pr-1">
-              {data.topLate.map((item, i) => (
-                <li
-                  key={item.studentId}
-                  className="flex items-center gap-3 p-2.5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 transition-all"
-                >
-                  <span className="w-6 h-6 rounded-full bg-white/5 font-mono text-slate-400 text-xs font-bold flex items-center justify-center">
-                    #{i + 1}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm text-white truncate">
-                      {item.studentName}
-                    </p>
-                    <p className="text-xs text-slate-400">{item.grade}</p>
-                  </div>
-                  <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-black px-2.5 py-1 rounded-xl tabular-nums">
-                    {item.count} {item.count === 1 ? 'tardanza' : 'tardanzas'}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          )}
-
-          <div className="mt-4 pt-3 border-t border-white/5 text-center">
-            <Link
-              href="/admin/scans"
-              className="pressable text-sky-400 hover:text-sky-300 text-xs font-bold inline-flex items-center gap-1.5"
-            >
-              <span>Ver bitácora completa de marcaciones</span>
-              <span>→</span>
-            </Link>
-          </div>
-        </div>
+    <div className="chart">
+      <svg
+        viewBox="0 0 650 252"
+        role="img"
+        aria-label={`Entradas confirmadas por hora. Total: ${total}. ${hours.map((h) => `${h.hour}:00: ${h.count}`).join("; ")}`}
+      >
+        {Array.from({ length: 5 }, (_, i) => {
+          const y = 20 + i * 44;
+          return (
+            <g key={i}>
+              <line
+                x1="35"
+                y1={y}
+                x2="642"
+                y2={y}
+                stroke="#e8ede9"
+                strokeDasharray="3 4"
+              />
+              <text x="22" y={y + 4} textAnchor="end" className="chart-label">
+                {step * (4 - i)}
+              </text>
+            </g>
+          );
+        })}
+        {items.map((item, i) => {
+          const height = (item.count / (step * 4)) * 176,
+            x = 42 + i * (600 / items.length);
+          return (
+            <g key={item.hour}>
+              <rect
+                x={x}
+                y={196 - height}
+                width={Math.min(23, (600 / items.length) * 0.6)}
+                height={height}
+                rx="3"
+                fill={item.hour < 12 ? "#287a56" : "#8db59c"}
+              >
+                <title>
+                  {item.hour}:00 · {item.count} entradas
+                </title>
+              </rect>
+              <text
+                x={x + Math.min(23, (600 / items.length) * 0.6) / 2}
+                y="220"
+                textAnchor="middle"
+                className={`chart-label ${i % 3 ? "chart-hour-extra" : ""}`}
+              >
+                {String(item.hour).padStart(2, "0")}
+              </text>
+            </g>
+          );
+        })}
+        {!total && (
+          <text x="340" y="106" textAnchor="middle" className="chart-label">
+            Sin entradas confirmadas
+          </text>
+        )}
+      </svg>
+      <div className="row between">
+        <span className="chart-legend">
+          <span className="legend-square" />
+          Entradas confirmadas
+        </span>
+        <span className="muted" style={{ fontSize: 10 }}>
+          Hora local · America/Lima
+        </span>
       </div>
     </div>
   );
 }
-
-function StatCard({
-  label,
-  value,
-  color,
-  icon,
-}: {
-  label: string;
-  value: number;
-  color: 'sky' | 'emerald' | 'amber' | 'rose';
-  icon: string;
-}) {
-  const styles = {
-    sky: {
-      border: 'border-sky-500/30',
-      text: 'text-sky-400',
-      iconBg: 'bg-sky-500/15 text-sky-300 border-sky-500/20',
-      glow: 'shadow-[0_0_24px_rgba(56,189,248,0.12)]',
-    },
-    emerald: {
-      border: 'border-emerald-500/30',
-      text: 'text-emerald-400',
-      iconBg: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20',
-      glow: 'shadow-[0_0_24px_rgba(16,185,129,0.12)]',
-    },
-    amber: {
-      border: 'border-amber-500/30',
-      text: 'text-amber-400',
-      iconBg: 'bg-amber-500/15 text-amber-300 border-amber-500/20',
-      glow: 'shadow-[0_0_24px_rgba(245,158,11,0.12)]',
-    },
-    rose: {
-      border: 'border-rose-500/30',
-      text: 'text-rose-400',
-      iconBg: 'bg-rose-500/15 text-rose-300 border-rose-500/20',
-      glow: 'shadow-[0_0_24px_rgba(244,63,94,0.12)]',
-    },
-  };
-
-  const st = styles[color];
-
+export default function Dashboard() {
+  const { data, error, loading, reload } = useResource<Overview>(
+    "/api/admin/overview",
+    30000,
+  );
+  const s = data?.summary;
   return (
-    <div
-      className={`glass-card rounded-3xl p-5 border transition-all duration-200 select-none ${st.border} ${st.glow}`}
-    >
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-[11px] text-slate-400 uppercase tracking-widest font-black">
-          {label}
-        </p>
-        <span
-          className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm border ${st.iconBg}`}
-        >
-          {icon}
-        </span>
-      </div>
-      <p className={`text-4xl font-black tabular-nums tracking-tight ${st.text}`}>
-        {value}
-      </p>
-    </div>
+    <>
+      <PageHeading
+        title="Resumen de asistencia"
+        description="Una vista de la jornada, desde la primera entrada hasta el cierre."
+      >
+        <RefreshButton onClick={() => void reload()} disabled={loading} />
+        <Link href="/admin/reports" className="button">
+          <ArrowUpRight size={16} />
+          Crear reporte
+        </Link>
+      </PageHeading>
+      <ErrorNotice message={error} retry={() => void reload()} />
+      {loading && !data ? (
+        <Loading />
+      ) : data && s ? (
+        <>
+          <div
+            className="row between"
+            style={{ marginBottom: 20, fontSize: 11 }}
+          >
+            <div className="row muted">
+              <CalendarDays size={15} />
+              {localDate(data.date)}
+            </div>
+            <span className="row muted">
+              <span className="status-dot" />
+              Actualización cada 30 segundos
+            </span>
+          </div>
+          {data.synthetic && (
+            <div className="notice neutral">
+              Entorno de prueba con alumnos y registros sintéticos. No
+              representa la asistencia de un colegio real.
+            </div>
+          )}
+          <section className="summary-strip" aria-label="Resumen de la jornada">
+            {[
+              {
+                label: "Alumnos matriculados",
+                value: s.total,
+                detail: "Matrículas vigentes",
+                icon: Users,
+                style: "",
+              },
+              {
+                label: "Presentes",
+                value: s.present,
+                detail: `${s.total ? Math.round((s.present / s.total) * 100) : 0}% del padrón de hoy`,
+                icon: UserCheck,
+                style: "positive",
+              },
+              {
+                label: "Tardanzas",
+                value: s.late,
+                detail: "Según horario y tolerancia",
+                icon: Clock3,
+                style: "caution",
+              },
+              {
+                label: "Sin entrada",
+                value: Math.max(
+                  0,
+                  s.total - s.present - s.justified - s.nonTeaching,
+                ),
+                detail: `${s.pending} sin registro · ${s.absent} ausentes al cierre`,
+                icon: UserRoundMinus,
+                style: "",
+              },
+            ].map((m) => (
+              <div className={`summary-item ${m.style}`} key={m.label}>
+                <div className="summary-label">
+                  {m.label}
+                  <m.icon size={15} />
+                </div>
+                <span className="summary-number">
+                  {m.value.toLocaleString("es-PE")}
+                </span>
+                <p>{m.detail}</p>
+              </div>
+            ))}
+          </section>
+          <div className="dashboard-grid">
+            <section className="surface">
+              <div className="surface-header">
+                <div>
+                  <h2>El ritmo de la jornada</h2>
+                  <p>Entradas confirmadas, agrupadas por hora de captura.</p>
+                </div>
+                <ScanLine size={17} className="muted" />
+              </div>
+              <AttendanceChart hours={data.hourly} />
+            </section>
+            <section className="surface review-summary">
+              <div>
+                <div className="row between">
+                  <h2>Por revisar</h2>
+                  <ShieldCheck size={17} className="muted" />
+                </div>
+                <div className="review-number">{data.review}</div>
+                <p>
+                  {data.review
+                    ? "Capturas que necesitan una decisión antes de confirmar asistencia."
+                    : "No hay incidencias pendientes de resolver."}
+                </p>
+                <MoreLink href="/admin/review">Abrir incidencias</MoreLink>
+              </div>
+              <div className="review-tasks">
+                <div className="review-task">
+                  <span>Justificaciones del día</span>
+                  <strong>{s.justified}</strong>
+                </div>
+                <div className="review-task">
+                  <span>Terminales habilitadas</span>
+                  <strong>
+                    {data.terminals.filter((t) => t.enabled).length}
+                  </strong>
+                </div>
+              </div>
+            </section>
+          </div>
+          <section className="surface">
+            <div className="surface-header">
+              <div>
+                <h2>Últimos movimientos</h2>
+                <p>La hora corresponde a la captura original.</p>
+              </div>
+              <MoreLink href="/admin/scans">Ver registro</MoreLink>
+            </div>
+            {data.recent.length ? (
+              <div className="table-scroll">
+                <table>
+                  <caption className="visually-hidden">
+                    Movimientos recientes de asistencia
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th>Alumno</th>
+                      <th>Aula</th>
+                      <th>Hora</th>
+                      <th>Movimiento</th>
+                      <th>Estado</th>
+                      <th>Terminal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.recent.map((r) => (
+                      <tr key={r.id}>
+                        <td>
+                          <div className="name-cell">
+                            <span className="avatar">
+                              {r.student_name.slice(0, 1)}
+                            </span>
+                            <strong>{r.student_name}</strong>
+                          </div>
+                        </td>
+                        <td>
+                          {r.grade} · {r.section}
+                        </td>
+                        <td>{localTime(r.occurred_at)}</td>
+                        <td>
+                          {r.direction === "ENTRY" ? "Entrada" : "Salida"}
+                        </td>
+                        <td>
+                          <Badge
+                            state={
+                              r.disposition === "ACCEPTED"
+                                ? r.status
+                                : r.disposition
+                            }
+                          />
+                        </td>
+                        <td className="muted">{r.terminal_name}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <Empty
+                title="La jornada todavía no tiene movimientos"
+                description="Abre la terminal de portería y registra el primer carnet. Las capturas confirmadas se mostrarán en esta lista."
+              >
+                <Link className="button secondary" href="/ingreso">
+                  Abrir portería
+                  <ArrowUpRight size={15} />
+                </Link>
+              </Empty>
+            )}
+          </section>
+        </>
+      ) : null}
+    </>
   );
 }

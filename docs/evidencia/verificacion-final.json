@@ -1,0 +1,47 @@
+{
+  "fechaUtc": "2026-11-17",
+  "fechaEscolar": "2026-11-16",
+  "zonaEscolar": "America/Lima",
+  "rama": "work",
+  "ambito": "Verificación en el entorno de desarrollo, con bases aisladas y datos sintéticos; no es un resultado de CI ni aceptación institucional.",
+  "pruebas": {
+    "unitarias": { "comando": "npm run test:run", "aprobadas": 82 },
+    "postgresql": { "comando": "npm run test:integration", "aprobadas": 14 },
+    "navegadorDemo": { "comando": "npm run test:e2e", "aprobadas": 6 },
+    "navegadorInstitucional": {
+      "comando": "npm run test:e2e:institution",
+      "aprobadas": 9
+    },
+    "totalAprobadas": 111
+  },
+  "comprobaciones": {
+    "typecheck": "aprobado",
+    "lint": "aprobado",
+    "buildProduccion": "aprobado",
+    "auditoriaDependenciasProduccion": { "vulnerabilidadesConocidas": 0 },
+    "restauracionAislada": {
+      "tablasConHuellasCoincidentes": 24,
+      "evidencia": "restauracion.json"
+    },
+    "instalacionDesdeClusterNuevo": {
+      "migraciones": 8,
+      "evidencia": "instalacion.json"
+    },
+    "capturasVisuales": {
+      "cantidad": 10,
+      "directorio": "../../.impeccable/review",
+      "erroresConsola": 0,
+      "desbordamientosGlobales": 0
+    },
+    "revisionVisual": "Hallazgo de orden y foco del editor resuelto; disposición final ship frente al contrato textual.",
+    "secretosDeInstalacion": "Sin coincidencias en los archivos de entrega; variables, claves y credenciales locales excluidas de Git."
+  },
+  "pendientesInstitucionales": [
+    "Aprobación de reglas, privacidad y conservación.",
+    "Prueba física de lectores, carnets y varios canales por equipo.",
+    "HTTPS entre equipos y custodia de dos copias institucionales.",
+    "Simulacro de recuperación y piloto de cinco jornadas."
+  ],
+  "alcanceIso": "Controles técnicos orientados a ISO/IEC 27001 y 27002; no constituye certificación ni un SGSI completo.",
+  "publicacion": "Sin despliegue ni contratación de servicios."
+}

@@ -2,12 +2,12 @@
 
 Las skills son instrucciones locales de trabajo; su incorporación no crea un servicio externo ni modifica por sí sola la interfaz.
 
-| Recurso | Ubicación | Función |
-|---|---|---|
-| Unslop | [SKILL.md](../.agents/skills/unslop/SKILL.md) | Auditar patrones genéricos y definir una dirección propia para el dashboard; trabajar espaciado, color, iconos, texto, tipografía, composición, detalles y movimiento |
-| Impeccable | [SKILL.md](../.agents/skills/impeccable/SKILL.md) | UX, jerarquía visual, accesibilidad, estados y coherencia del sistema de diseño |
-| Emil Kowalski | [emil-design-eng](../.agents/skills/emil-design-eng/SKILL.md) | Comportamiento de componentes, microinteracciones y movimiento que ayude a usar la interfaz |
-| Playwright | [Configuración](../playwright.config.ts) y [pruebas](../tests/e2e/phase-one.spec.ts) | Herramienta de navegador para validar la implementación; no es una skill de estilo |
+| Recurso       | Ubicación                                                                            | Función                                                                                                                                                               |
+| ------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unslop        | [SKILL.md](../.agents/skills/unslop/SKILL.md)                                        | Auditar patrones genéricos y definir una dirección propia para el dashboard; trabajar espaciado, color, iconos, texto, tipografía, composición, detalles y movimiento |
+| Impeccable    | [SKILL.md](../.agents/skills/impeccable/SKILL.md)                                    | UX, jerarquía visual, accesibilidad, estados y coherencia del sistema de diseño                                                                                       |
+| Emil Kowalski | [emil-design-eng](../.agents/skills/emil-design-eng/SKILL.md)                        | Comportamiento de componentes, microinteracciones y movimiento que ayude a usar la interfaz                                                                           |
+| Playwright    | [Configuración](../playwright.config.ts) y [pruebas](../tests/e2e/phase-one.spec.ts) | Herramienta de navegador para validar la implementación; no es una skill de estilo                                                                                    |
 
 ## Uso en este proyecto
 
@@ -23,3 +23,9 @@ Unslop incluye scripts opcionales de snapshot y story video. Playwright/Chromium
 ## Atribución
 
 Unslop fue creado por Damir Sokolovsky ([@heydamir](https://x.com/heydamir)) y se distribuye bajo [CC BY 4.0](../.agents/skills/unslop/LICENSE). La definición aportada por el usuario y los recursos originales se conservan junto a su [procedencia y versión](../.agents/skills/unslop/IMPORT.md).
+
+## Aplicación en las fases 2–5
+
+Se aplicaron Unslop, Impeccable y Emil al panel y la terminal. `PRODUCT.md` fija hechos; `.impeccable/briefs/asistencia.md` documenta la dirección operativa y el fallback del selector remoto. La construcción utiliza código y recursos libres, sin generación de imágenes ni servicios externos de diseño. Chromium/Playwright verifica recorridos, escritorio y móvil; la revisión final se registra junto al sistema de diseño.
+
+Public Sans: autores del proyecto [USWDS Public Sans](https://github.com/uswds/public-sans), SIL Open Font License 1.1; distribución autoalojada mediante `@fontsource-variable/public-sans`. Iconos [Lucide](https://lucide.dev), licencia ISC, paquete `lucide-react`. Se conserva la atribución de Unslop a Damir Sokolovsky / @heydamir y su licencia CC BY 4.0.

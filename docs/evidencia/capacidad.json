@@ -1,0 +1,162 @@
+{
+  "measuredAt": "2026-11-17T00:03:30.431Z",
+  "synthetic": true,
+  "method": "Isolated PostgreSQL; structural event/receipt data, not valid business history or signed receipt validation. SQL loading time is not application latency.",
+  "postgres": "PostgreSQL 17.12 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+  "students": 1000,
+  "events": 100000,
+  "receipts": 100000,
+  "loadSeconds": 21.129,
+  "totalBytes": 305659904,
+  "annualEventsAssumption": 880000,
+  "annualBytesLinearEstimate": 2689807155,
+  "cloud500MiBFitsLinearEstimate": false,
+  "sizes": [
+    {
+      "table_name": "attendance_adjustments",
+      "bytes": "24576"
+    },
+    {
+      "table_name": "attendance_events",
+      "bytes": "59817984"
+    },
+    {
+      "table_name": "audit_log",
+      "bytes": "24576"
+    },
+    {
+      "table_name": "calendar_days",
+      "bytes": "16384"
+    },
+    {
+      "table_name": "credentials",
+      "bytes": "286720"
+    },
+    {
+      "table_name": "daily_attendance",
+      "bytes": "16384"
+    },
+    {
+      "table_name": "enrollments",
+      "bytes": "393216"
+    },
+    {
+      "table_name": "import_batches",
+      "bytes": "16384"
+    },
+    {
+      "table_name": "login_limits",
+      "bytes": "24576"
+    },
+    {
+      "table_name": "notification_reads",
+      "bytes": "8192"
+    },
+    {
+      "table_name": "notifications",
+      "bytes": "24576"
+    },
+    {
+      "table_name": "recovery_cases",
+      "bytes": "24576"
+    },
+    {
+      "table_name": "report_snapshots",
+      "bytes": "16384"
+    },
+    {
+      "table_name": "scan_receipts",
+      "bytes": "244178944"
+    },
+    {
+      "table_name": "scanners",
+      "bytes": "49152"
+    },
+    {
+      "table_name": "schedule_versions",
+      "bytes": "32768"
+    },
+    {
+      "table_name": "schedules",
+      "bytes": "65536"
+    },
+    {
+      "table_name": "schools",
+      "bytes": "32768"
+    },
+    {
+      "table_name": "sessions",
+      "bytes": "16384"
+    },
+    {
+      "table_name": "signing_keys",
+      "bytes": "49152"
+    },
+    {
+      "table_name": "students",
+      "bytes": "360448"
+    },
+    {
+      "table_name": "terminal_operators",
+      "bytes": "24576"
+    },
+    {
+      "table_name": "terminal_sessions",
+      "bytes": "40960"
+    },
+    {
+      "table_name": "terminals",
+      "bytes": "49152"
+    },
+    {
+      "table_name": "users",
+      "bytes": "65536"
+    }
+  ],
+  "queryPlan": {
+    "Plan": {
+      "Node Type": "Index Scan",
+      "Parallel Aware": false,
+      "Async Capable": false,
+      "Scan Direction": "Forward",
+      "Index Name": "events_day",
+      "Relation Name": "attendance_events",
+      "Alias": "attendance_events",
+      "Startup Cost": 0.42,
+      "Total Cost": 8.44,
+      "Plan Rows": 1,
+      "Plan Width": 22,
+      "Actual Startup Time": 0.028,
+      "Actual Total Time": 0.028,
+      "Actual Rows": 1,
+      "Actual Loops": 1,
+      "Index Cond": "((school_id = '8854c09d-6af6-45dd-be21-0a088610820e'::uuid) AND (local_date = CURRENT_DATE) AND (student_id = '61cc7c74-fa20-4177-8e49-ec0a1a61bc78'::uuid))",
+      "Rows Removed by Index Recheck": 0,
+      "Shared Hit Blocks": 0,
+      "Shared Read Blocks": 4,
+      "Shared Dirtied Blocks": 0,
+      "Shared Written Blocks": 0,
+      "Local Hit Blocks": 0,
+      "Local Read Blocks": 0,
+      "Local Dirtied Blocks": 0,
+      "Local Written Blocks": 0,
+      "Temp Read Blocks": 0,
+      "Temp Written Blocks": 0
+    },
+    "Planning": {
+      "Shared Hit Blocks": 25,
+      "Shared Read Blocks": 4,
+      "Shared Dirtied Blocks": 0,
+      "Shared Written Blocks": 0,
+      "Local Hit Blocks": 0,
+      "Local Read Blocks": 0,
+      "Local Dirtied Blocks": 0,
+      "Local Written Blocks": 0,
+      "Temp Read Blocks": 0,
+      "Temp Written Blocks": 0
+    },
+    "Planning Time": 0.23,
+    "Triggers": [],
+    "Execution Time": 0.05
+  }
+}

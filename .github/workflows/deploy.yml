@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  NEXT_TELEMETRY_DISABLED: '1'
+  NEXT_TELEMETRY_DISABLED: "1"
 
 jobs:
   validate:
@@ -26,9 +26,14 @@ jobs:
       - run: npm run lint
       - run: npm run test:run
       - run: npm audit --omit=dev --audit-level=high
+      - run: npm run setup:local
+      - run: npm run test:integration
+      - run: npm run backup -- var/ci-verification.sca
+      - run: npm run restore:verify -- var/ci-verification.sca
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+      - run: npm run test:e2e:institution
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

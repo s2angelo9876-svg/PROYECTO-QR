@@ -1,0 +1,12 @@
+{
+  "measuredAt": "2026-11-17T00:34:59.082Z",
+  "synthetic": true,
+  "method": "Real PostgreSQL and ES256 receipts through application domain; excludes HTTP/browser/network/hardware.",
+  "events": 100,
+  "concurrency": 8,
+  "totalMs": 361,
+  "p50Ms": 28,
+  "p95Ms": 34,
+  "maximumMs": 44,
+  "allCommitted": true
+}

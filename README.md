@@ -1,74 +1,90 @@
 # SCA-QR · Control de asistencia escolar
 
-Prototipo PWA con datos ficticios. Primera entrega técnica del [SDD](docs/SDD_MEJORA_GRATUITA.md), con [controles de seguridad y límites documentados](docs/IMPLEMENTACION_FASE_1.md).
+PWA para registrar entradas y salidas con QR firmado, conservar capturas sin conexión, gestionar matrículas y resolver incidencias con auditoría. Incluye un panel adaptable y una ruta de operación local sin contratar servicios de pago.
 
-**El backend actual usa memoria volátil.** No utilizar con datos reales hasta completar persistencia, cuentas/roles institucionales, credenciales QR y recuperación. El frontend conserva copias locales; una respuesta del demo no se presenta como asistencia institucional definitiva.
+## Inicio institucional gratuito
 
-## Inicio local
-
-Requisitos: **Node 24.x y npm 11.x**. Versión de referencia en `.nvmrc`.
+Requisitos: **Node 24.x, npm 11.x y Docker con contenedores Linux**. Versiones de referencia en `.nvmrc` y `package.json`. En Windows se puede usar Docker Engine dentro de WSL2; Docker Desktop no es un requisito de esta ruta gratuita.
 
 ```bash
 npm ci
-node scripts/setup-demo.mjs
+npm run setup:local
 npm run dev
 ```
 
-El helper crea `.env.local` con un secreto JWT aleatorio, sin mostrarlo ni sobrescribir archivos existentes. No lo subas a Git. Si ya existe configuración, revisa de forma segura `SCA_DEMO_MODE` y `JWT_SECRET`.
+Abre `http://localhost:3000/admin/login`. El usuario inicial es `admin`; su contraseña aleatoria está en el archivo privado `var/bootstrap.txt`. Debes cambiarla desde Configuración → Cuenta. El instalador crea PostgreSQL 17, volumen persistente, migraciones, claves de firma y configuración local; no sobrescribe `.env.local` ni publica servicios.
 
-En desarrollo el demo está habilitado. Fuera de desarrollo necesita `SCA_DEMO_MODE=true` explícito; sin activación las APIs ficticias responden 503. El acceso administrativo necesita un secreto configurado de al menos 32 caracteres. No hay secretos de respaldo.
+- `.env.local` contiene únicamente la configuración de ejecución y la cuenta PostgreSQL restringida.
+- `var/maintenance.env` conserva el acceso de mantenimiento. `var/backup.key` protege las copias; guarda una copia institucional separada.
+- `.env.local`, `var/`, backups y evidencias del navegador se excluyen de Git.
+- `npm run setup:local -- --fixtures` crea una instalación **sintética** de 120 alumnos para pruebas; no usar esa opción para un padrón real.
+- Si ya existe un `.env.local` de demostración, consérvalo de forma privada antes de preparar una instalación institucional nueva. No elimines el almacenamiento del navegador ni un volumen con datos para cambiar de modo.
 
-El demo incluye ocho alumnos ficticios; acceso de prueba `admin` / `admin123`, disponible exclusivamente en el modo demo. Abre la pantalla de ingreso y usa búsqueda manual o los botones de simulación. Los sonidos y avatares de demostración son assets locales, sin proveedores externos.
-
-## Captura y desconexión
-
-- Toda captura admitida se guarda primero en IndexedDB con un único ID y su lector/entrada.
-- Ámbar significa pendiente, recepción demo o revisión. El prototipo no confirma persistencia institucional ni puntualidad definitiva.
-- Red caída, timeout y 503 conservan los registros para reintento. Un conflicto/rechazo permanece visible y no se borra después de tres intentos.
-- Un 401 pausa el envío hasta iniciar sesión y reanudar. No borrar el perfil del navegador para solucionar la cola.
-- `Exportar copia local` descarga los comandos y recibos retenidos; exportar no libera pendientes. La restauración administrativa completa es una fase posterior.
-- El SW registra automáticamente el shell y assets públicos compilados. No cachea APIs, administración, sesiones ni reportes.
-- Para actualizar desde una versión anterior, cerrar todas las pestañas/ventanas de SCA-QR y abrir de nuevo. No se fuerza una recarga durante una lectura.
-
-El piloto configura **un lector por terminal**. Un frame de teclado válido puede ser `N1|72345678|SCAQR723` + Enter; sin prefijo se admite solo si hay un lector configurado. Las firmas son de demostración: ocho caracteres no prueban autenticidad. Varios HID simultáneos pueden intercalar caracteres y requieren validación/adaptador por dispositivo. El botón de prueba de hardware solo produce sonido y respuesta visual, sin crear asistencia.
-
-## Verificación
+Para una instalación existente:
 
 ```bash
-npm run lint
-npm run typecheck
-npm run test:run
-npm run build
-npm run test:e2e
-```
-
-Para E2E se necesita Chromium: `npx playwright install chromium` si no está instalado. La suite usa el build de producción, un puerto local exclusivo y un secreto efímero. No requiere Supabase, correo ni servicios de pago.
-
-Para ejecutar el build manualmente:
-
-```bash
+npm run db:migrate
 npm run build
 npm start
 ```
 
-No ejecutar `dev` y `build` sobre la misma carpeta `.next` al mismo tiempo. CI ejecuta validaciones, auditoría de dependencias de producción y pruebas de navegador; no despliega a VPS ni publica la aplicación.
+No ejecutar `dev` y `build` sobre la misma carpeta `.next` al mismo tiempo. Las APIs ficticias quedan deshabilitadas cuando hay `DATABASE_URL`; una caída de PostgreSQL no activa el demo como alternativa.
 
-## Stack actual
+## Operación
 
-- Next.js 16 y React 19; TypeScript y Tailwind.
-- IndexedDB mediante `idb`, esquema único con migraciones conservadoras.
-- Zod 4 para contratos y ACK vinculados al comando con SHA-256.
-- JWT con `jose`; credenciales/usuarios ficticios aislados por el modo demo.
-- Vitest, fake-indexeddb y Playwright.
+1. Configura institución, usuarios, horarios, calendario y terminales. Asigna los operadores a cada terminal.
+2. Registra alumnos con su matrícula anual o importa CSV después de revisar la vista previa.
+3. Emite y, cuando corresponda, revoca carnets desde Alumnos y matrículas. El QR contiene identificadores opacos; portería coteja la identidad.
+4. En portería, inicia sesión y autoriza una terminal por ocho horas. Se descarga un padrón mínimo y las claves públicas.
+5. Utiliza un lector HID por estación. El modo de varios lectores admite canales seriales independientes con Web Serial; el modelo, modo serial, velocidad y sistema operativo requieren prueba física.
+6. Revisa incidencias y genera una instantánea para exportar el mismo reporte completo en PDF y CSV.
 
-## Skills de diseño
+El verde de asistencia requiere un recibo durable con firma válida. Ámbar indica captura local, revisión o demostración. Un 401 pausa la cola; los reintentos conservan ID, contexto y hora. Las resoluciones son registros adicionales y no cambian los recibos originales.
 
-Disponibles en `.agents/skills`: Unslop, Impeccable y `emil-design-eng`, con Playwright como herramienta de verificación. Consulta [su función y procedencia](docs/SKILLS_DISENO.md) antes de trabajar en el dashboard.
+La PWA guarda únicamente el shell y recursos públicos en Cache Storage. El padrón mínimo y los comandos viven en IndexedDB; su autorización expira. Las copias locales institucionales se cifran con contraseña y se exportan por bloques de hasta 5.000 capturas. Descarga todos los bloques y conserva la contraseña aparte. Una restauración no confirma asistencia por sí sola: administración debe reconciliar los recibos.
 
-## Alcance pendiente
+## Copias y recuperación
 
-PostgreSQL transaccional, usuarios/roles reales, RLS y autorización de terminales; QR JWS revocable; calendario/entrada-salida escolar; exportación completa de reportes; backups/restauración, privacidad institucional y hardware real.
+```bash
+npm run backup -- backups/asistencia-AAAA-MM-DD.sca
+npm run restore:verify -- backups/asistencia-AAAA-MM-DD.sca
+```
 
-El PDF demo conserva su límite de 80 filas y el correo está deshabilitado por defecto. Redis es un adaptador opcional no requerido ni validado para esta entrega. Los planes cloud gratuitos se evaluarán con sus cuotas antes de desplegar; no se ha contratado ni creado ningún servicio.
+La verificación restaura en una base aislada, compara conteos y huellas de todas las tablas y elimina esa base al terminar. `--keep` conserva la base aislada para una recuperación administrada. No reemplaza automáticamente la base activa.
 
-Aplicar controles alineados con ISO 27001/27002 no equivale a certificación ni a un SGSI institucional completo. Consulta el registro de riesgos, evidencias y procedimientos de la entrega.
+Consulta [operación y recuperación](docs/OPERACION_GRATUITA.md), [implementación de fases 2–5 y controles ISO](docs/IMPLEMENTACION_FASES_2_5.md) y [SDD vigente](docs/SDD_MEJORA_GRATUITA.md).
+
+## Verificación
+
+```bash
+npm run typecheck
+npm run lint
+npm run test:run
+npm run test:integration
+npm audit --omit=dev --audit-level=high
+npm run build
+npm run test:e2e
+npm run test:e2e:institution
+npm run measure:capacity
+```
+
+Las pruebas institucionales necesitan la instalación PostgreSQL local y crean bases aisladas con datos sintéticos. No escriben en el padrón activo. Para navegador: `npx playwright install chromium` si no hay Chromium instalado. CI valida; no despliega.
+
+La medición de 100.000 eventos y recibos y la prueba concurrente se guardan en [docs/evidencia](docs/evidencia). La proyección de 880.000 eventos/año supera la cuota de 500 MiB contemplada para Supabase Free; la implementación usa PostgreSQL local. La nube gratuita permanece como alternativa que requiere revisar capacidad y elegibilidad antes de habilitarla.
+
+## Demostración
+
+En un directorio de configuración separado, sin `.env.local` institucional:
+
+```bash
+node scripts/setup-demo.mjs
+npm run dev
+```
+
+Incluye ocho alumnos sintéticos y acceso `admin` / `admin123`, exclusivo del demo. Las firmas simplificadas y recibos en memoria del demo no acreditan asistencia institucional. Las pruebas E2E de fase 1 mantienen este modo aislado.
+
+## Diseño y alcance
+
+Unslop, Impeccable y Emil guían el diseño; [procedencia y licencias](docs/SKILLS_DISENO.md). Public Sans y Lucide se sirven desde el proyecto. No se usan imágenes generadas, analítica externa, correo, SMS ni servicios de pago en la operación implementada. Redis continúa siendo opcional y no es necesario.
+
+Los controles técnicos se alinean con ISO/IEC 27001 y 27002; no constituyen certificación ni sustituyen el SGSI y las decisiones de la institución. El piloto, hardware real, política legal de conservación, responsables y objetivos operativos deben validarse con el colegio.

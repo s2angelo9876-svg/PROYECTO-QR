@@ -1,14 +1,16 @@
 # SDD — Rediseño integral gratuito de SCA-QR
 
-Versión 1.2 · 16 de noviembre de 2026 (America/Lima) · Estado: implementación técnica inicial de fase 1; fases institucionales pendientes.
+Versión 2.0 · 16 de noviembre de 2026 (America/Lima) · Estado: fases técnicas 1–5 implementadas en la ruta local; aceptación institucional y hardware físico pendientes.
+
+Alcance actual y evidencias: [IMPLEMENTACION_FASES_2_5.md](IMPLEMENTACION_FASES_2_5.md). Operación, backups y recuperación: [OPERACION_GRATUITA.md](OPERACION_GRATUITA.md). Los apartados históricos que siguen documentan el diagnóstico y las alternativas originales; la decisión vigente es 3.0.
 
 Seguimiento de código y controles alineados con ISO: [IMPLEMENTACION_FASE_1.md](IMPLEMENTACION_FASE_1.md). Los resultados del reanálisis siguiente corresponden al baseline indicado, no a una certificación del código nuevo.
 
-SDD significa aquí **Software Design Document / Documento de Diseño de Software**. Este documento especifica el resultado deseado; no afirma que esas capacidades ya existan. Diagnóstico y evidencias: [ANALISIS_INTEGRAL.md](ANALISIS_INTEGRAL.md).
+SDD significa aquí **Software Design Document / Documento de Diseño de Software**. Este documento conserva el diseño objetivo y distingue la implementación técnica de los gates de aceptación. Diagnóstico y evidencias: [ANALISIS_INTEGRAL.md](ANALISIS_INTEGRAL.md).
 
-Código contrastado: `d44c688f79e46093a2eee105d7f1851682e10b48`. En esta segunda revisión pasaron 14 pruebas, TypeScript, lint y build; se validaron peticiones contra `npm start`, Chromium, la cola y un PDF de 100 filas. Se documentan 30 hallazgos, incluida ejecución de un marcador JavaScript inocuo mediante redirect de login sin validar. La aplicación sigue siendo un prototipo: esas comprobaciones no declaran preparación para producción.
+Diagnóstico histórico: código contrastado `d44c688f79e46093a2eee105d7f1851682e10b48`. En esta segunda revisión pasaron 14 pruebas, TypeScript, lint y build; se validaron peticiones contra `npm start`, Chromium, la cola y un PDF de 100 filas. Se documentan 30 hallazgos, incluida ejecución de un marcador JavaScript inocuo mediante redirect de login sin validar. La aplicación sigue siendo un prototipo: esas comprobaciones no declaran preparación para producción.
 
-Cambios de diseño frente a la versión anterior: conservar Next como opción estática preferente en vez de exigir Vite; corregir el registro del SW eliminado por la compilación; incorporar evidencia de caché privada y falsos éxitos en navegador; cerrar el contrato de firma JWS, la frontera de privilegios SQL y la reconciliación tras restore; cuantificar las cuotas gratuitas verificadas. No se han provisionado cuentas, aplicado migraciones ni publicado servicios.
+Cambios de diseño frente a la versión anterior: conservar Next como opción estática preferente en vez de exigir Vite; corregir el registro del SW eliminado por la compilación; incorporar evidencia de caché privada y falsos éxitos en navegador; cerrar el contrato de firma JWS, la frontera de privilegios SQL y la reconciliación tras restore; cuantificar las cuotas gratuitas verificadas. En el diagnóstico original no se provisionaron cuentas ni migraciones. La entrega actual aplica migraciones y crea datos exclusivamente locales de preparación/prueba; no publica servicios externos.
 
 ## 1. Objetivo y restricciones
 
@@ -22,7 +24,7 @@ Restricciones obligatorias:
 - No publicar datos reales hasta verificar seguridad, permisos, restauración y condiciones del proveedor.
 - Un único colegio como alcance inicial; incluir `school_id` para aislar datos, sin construir todavía un SaaS multiinstitución.
 - Preservar operación básica sin correo, SMS, WhatsApp Business API, analítica externa, reconocimiento facial ni servicios de IA.
-- Este trabajo produce documentación. No cambia código, infraestructura, configuración publicada ni cuentas externas.
+- El usuario autorizó implementar el diseño y las fases restantes. Se cambia código, pruebas y configuración local; no se contratan ni publican servicios externos.
 
 Supuestos para dimensionar, sujetos a censo real: 1.000 alumnos, 2 entradas, 220 días lectivos/año, hasta 4 eventos/alumno/día incluyendo salidas. La documentación solicita 3–4 lectores por entrada y una laptop por entrada; conservar ese objetivo sin afirmar que los prefijos lo resuelven. El piloto usa un lector por laptop; completar el modo de varios lectores exige canales independientes comprobados y una fase específica. No presuponer que hay presupuesto o equipos para convertir ocho lectores en ocho laptops.
 
@@ -38,7 +40,15 @@ Portal de apoderados, múltiples colegios, aplicaciones móviles nativas, biomet
 
 ## 3. Arquitectura elegida y alternativa
 
-### 3.1 Ruta principal: nube gratuita para piloto
+### 3.0 ADR vigente: ruta local implementada
+
+Next.js 16/React 19 conserva SSR, cookies y rutas API; PostgreSQL 17 local en Docker aporta persistencia y RLS con un rol restringido. La identidad se implementa con bcrypt, sesiones revocables y JWT HttpOnly; no se ha desplegado Supabase Auth. Un instalador crea secretos de ejecución separados del acceso de mantenimiento y no sobrescribe configuraciones existentes.
+
+La medición de 100.000 eventos y recibos ocupa aproximadamente 292 MiB; el volumen anual previsto supera 2,5 GiB por extrapolación. Por eso no se declara viable una base completa dentro de los 500 MiB considerados para Supabase Free. Se elige la contingencia libre en equipo existente, sin compras, purgas para encajar una cuota ni activación automática de cobros. Evidencia reproducible: `docs/evidencia/capacidad.json`.
+
+Se implementan migraciones, usuarios/roles, recibos transaccionales, JWS, reglas históricas, terminales, canales Web Serial, panel, CSV/PDF completo, copias cifradas y reconciliación. Los lectores físicos, decisiones de privacidad y piloto siguen requiriendo validación institucional. La alternativa cloud de 3.1 permanece como propuesta no implementada; no se promete exportación estática del backend SSR actual.
+
+### 3.1 Alternativa cloud original: pendiente de capacidad y elegibilidad
 
 **Frontend PWA estático en Cloudflare Pages + Supabase Free para Auth/PostgreSQL/funciones**, sujeto a verificar elegibilidad institucional, disponibilidad regional, cuotas efectivas y ausencia de cobro automático antes de provisionar. Usar subdominios gratuitos del proveedor. Los servicios son candidatos de planes gratuitos, no recursos que ya se hayan creado o contratado. La documentación oficial consultada confirma planes gratuitos y cuotas; no garantiza continuidad ni suficiencia para todo un año escolar.
 
@@ -65,7 +75,7 @@ flowchart LR
   DB --> BACKUP[Exportación cifrada y restauración]
 ```
 
-### 3.2 Ruta de contingencia: software libre en equipo existente
+### 3.2 Ruta local elegida: software libre en equipo existente
 
 Si el plan gratuito no admite el colegio, sus cuotas no alcanzan o su continuidad resulta insuficiente, ejecutar PostgreSQL + API Node + PWA estática + proxy HTTPS en un equipo institucional disponible. Reutilizar la misma lógica de dominio, esquema SQL y contratos; implementar adaptador de identidad/sesiones para no depender de Supabase Auth en esta ruta. Desplegar como **modo alternativo con un solo escritor**, nunca dos bases independientes que luego se intenten fusionar manualmente.
 
@@ -75,30 +85,30 @@ La migración de nube a local requiere pausa controlada, drenaje/exportación de
 
 ### 3.3 Servicios y costo permitido
 
-| Necesidad | Elección inicial | Regla de gratuidad y alternativa |
-|---|---|---|
-| Hosting PWA | Cloudflare Pages, estático | Verificar free y condiciones institucionales; servir local si deja de cumplir |
-| Datos y autenticación | Supabase Free | Validar tamaño, conexiones, inactividad, Auth, exportación y límites de funciones; PostgreSQL/API local como salida |
-| Imágenes | Sin foto obligatoria en MVP; iniciales | Fotos comprimidas en storage privado solo si hay consentimiento, cuota y política de acceso |
-| Reportes | CSV/PDF generado con librerías libres | Sin servicio externo de PDF; límites de filas y prueba de paginación |
-| Notificaciones | Bandeja interna | Sin dependencia de mensajería externa |
-| Correo | Deshabilitado inicialmente | SMTP/Resend gratuito solo tras verificar dominio/remitente, cuotas y entrega; no comprar dominio para activarlo |
-| Pruebas | Vitest, Playwright y k6 locales | CI gratuito solo dentro de cuota; suite local siempre disponible |
-| Logs | Logs estructurados sin PII + visor local | Retención acotada; sin SaaS obligatorio |
-| Backups | Exportación cifrada en almacenamiento institucional | Dos copias controladas; no confiar en backups incluidos en un free tier sin verificar |
-| DNS/HTTPS cloud | Subdominio del proveedor | Sin dominio propio pagado |
-| Redis | No necesario | Índices PostgreSQL y caché local acotada primero |
+| Necesidad             | Elección inicial                                    | Regla de gratuidad y alternativa                                                                                    |
+| --------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Hosting PWA           | Cloudflare Pages, estático                          | Verificar free y condiciones institucionales; servir local si deja de cumplir                                       |
+| Datos y autenticación | Supabase Free                                       | Validar tamaño, conexiones, inactividad, Auth, exportación y límites de funciones; PostgreSQL/API local como salida |
+| Imágenes              | Sin foto obligatoria en MVP; iniciales              | Fotos comprimidas en storage privado solo si hay consentimiento, cuota y política de acceso                         |
+| Reportes              | CSV/PDF generado con librerías libres               | Sin servicio externo de PDF; límites de filas y prueba de paginación                                                |
+| Notificaciones        | Bandeja interna                                     | Sin dependencia de mensajería externa                                                                               |
+| Correo                | Deshabilitado inicialmente                          | SMTP/Resend gratuito solo tras verificar dominio/remitente, cuotas y entrega; no comprar dominio para activarlo     |
+| Pruebas               | Vitest, Playwright y k6 locales                     | CI gratuito solo dentro de cuota; suite local siempre disponible                                                    |
+| Logs                  | Logs estructurados sin PII + visor local            | Retención acotada; sin SaaS obligatorio                                                                             |
+| Backups               | Exportación cifrada en almacenamiento institucional | Dos copias controladas; no confiar en backups incluidos en un free tier sin verificar                               |
+| DNS/HTTPS cloud       | Subdominio del proveedor                            | Sin dominio propio pagado                                                                                           |
+| Redis                 | No necesario                                        | Índices PostgreSQL y caché local acotada primero                                                                    |
 
 Vercel Hobby no es elección base: su elegibilidad de uso institucional/comercial debe verificarse; no asumir que cualquier proyecto escolar califica. Workers/OpenNext tampoco es requisito: la arquitectura estática evita condicionar el núcleo a compatibilidad de Next SSR y cuotas de CPU edge. Servicios de prueba y créditos de bienvenida no son una solución gratuita permanente.
 
 ### 3.4 ADR: comparación de rutas sin servicios pagados
 
-| Alternativa | Reutilización | Límite o trabajo adicional | Decisión |
-|---|---|---|---|
-| Next estático + Supabase + Pages | Conserva páginas/links; extrae backend y sesión | Export estático, CORS, RLS/RPC, cuotas DB y backup propio | Objetivo cloud preferido, tras spike de exportación |
-| Next/Node + PostgreSQL en equipo disponible | Mayor reutilización del runtime actual | Equipo encendido, HTTPS, mantenimiento y copias | Ruta válida si hay equipo y responsable; no depende de un VPS pagado |
-| Vite SPA + Supabase + Pages | Conserva componentes React | Cambiar routing, layouts y build; mismas necesidades de seguridad/BD | Alternativa, no migración obligatoria |
-| Next SSR en Workers/OpenNext | Conserva parte del servidor | Validar adaptador, CPU, bibliotecas Node/PDF y sesiones | No elegida para el primer piloto |
+| Alternativa                                 | Reutilización                                   | Límite o trabajo adicional                                           | Decisión                                                             |
+| ------------------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Next estático + Supabase + Pages            | Conserva páginas/links; extrae backend y sesión | Export estático, CORS, RLS/RPC, cuotas DB y backup propio            | Objetivo cloud preferido, tras spike de exportación                  |
+| Next/Node + PostgreSQL en equipo disponible | Mayor reutilización del runtime actual          | Equipo encendido, HTTPS, mantenimiento y copias                      | Ruta válida si hay equipo y responsable; no depende de un VPS pagado |
+| Vite SPA + Supabase + Pages                 | Conserva componentes React                      | Cambiar routing, layouts y build; mismas necesidades de seguridad/BD | Alternativa, no migración obligatoria                                |
+| Next SSR en Workers/OpenNext                | Conserva parte del servidor                     | Validar adaptador, CPU, bibliotecas Node/PDF y sesiones              | No elegida para el primer piloto                                     |
 
 Las correcciones P0 se pueden implementar y probar en el checkout Next actual antes de escoger alojamiento. La aplicación no obtiene persistencia ni seguridad por cambiar de framework.
 
@@ -110,28 +120,28 @@ Los sitios comerciales consultados devolvieron 403, pero sí se recuperó el con
 
 ## 4. Requisitos verificables
 
-| ID | Requisito | Criterio de aceptación |
-|---|---|---|
-| RF01 | Padrón y matrícula | Importación con preview, errores por fila, unicidad y confirmación; no importar parcialmente sin informe |
-| RF02 | Credenciales | Emisión, expiración, reemplazo y revocación; QR sin DNI ni nombre |
-| RF03 | Captura durable | Cada captura admitida queda en IndexedDB antes de indicar almacenamiento local |
-| RF04 | Confirmación | Verde definitivo solo si existe ACK de servidor persistido y consistente |
-| RF05 | Idempotencia | Misma terminal/ID/hash devuelve mismo resultado; distinto hash con mismo ID se rechaza |
-| RF06 | Offline | Reiniciar navegador sin red conserva pendientes y permite capturar con autorización offline vigente |
-| RF07 | Sincronización | Reintentos no pierden eventos; rechazos quedan visibles y exportables |
-| RF08 | Asistencia | Estado diario consistente con matrícula, calendario y horario Lima versionado |
-| RF09 | Control de acceso | Acceso anónimo no lee padrón ni escribe scans; rol sin permiso recibe 403 |
-| RF10 | Auditoría | Cambios de padrón, credencial, permisos y asistencia registran actor y motivo |
-| RF11 | Reportes | Resumen y detalle provienen del mismo snapshot/filtros; CSV/PDF coinciden |
-| RF12 | Recuperación | Restaurar copia en BD aislada y reconciliar eventos/ACK sin duplicación |
-| RF13 | Manual | Solo operador autorizado; motivo obligatorio; no falsificar firma QR |
-| RF14 | Terminales | Un administrador habilita/revoca terminal y entrada; cliente no se autoasigna permisos |
-| RF15 | Contingencia | Exportar pendientes sin marcarlos sincronizados; reimportación conserva IDs |
-| RF16 | PWA real | Build de producción registra SW automáticamente; arranque offline frío tras instalación y ningún dato privado en Cache Storage |
-| RF17 | Integridad del comando | Reusar event_id con otro payload no devuelve la asistencia de otro alumno |
-| RF18 | Exportación completa | Dataset sintético >80 filas sale completo en PDF/CSV, con conteo y snapshot coincidentes |
-| RF19 | Salud en vivo | Liveness/readiness no se prerenderizan ni usan timestamp estático; no incluyen PII |
-| RF20 | Navegación segura | Login solo redirige a destinos internos autorizados; javascript/data y URLs externas no se ejecutan |
+| ID   | Requisito              | Criterio de aceptación                                                                                                         |
+| ---- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| RF01 | Padrón y matrícula     | Importación con preview, errores por fila, unicidad y confirmación; no importar parcialmente sin informe                       |
+| RF02 | Credenciales           | Emisión, expiración, reemplazo y revocación; QR sin DNI ni nombre                                                              |
+| RF03 | Captura durable        | Cada captura admitida queda en IndexedDB antes de indicar almacenamiento local                                                 |
+| RF04 | Confirmación           | Verde definitivo solo si existe ACK de servidor persistido y consistente                                                       |
+| RF05 | Idempotencia           | Misma terminal/ID/hash devuelve mismo resultado; distinto hash con mismo ID se rechaza                                         |
+| RF06 | Offline                | Reiniciar navegador sin red conserva pendientes y permite capturar con autorización offline vigente                            |
+| RF07 | Sincronización         | Reintentos no pierden eventos; rechazos quedan visibles y exportables                                                          |
+| RF08 | Asistencia             | Estado diario consistente con matrícula, calendario y horario Lima versionado                                                  |
+| RF09 | Control de acceso      | Acceso anónimo no lee padrón ni escribe scans; rol sin permiso recibe 403                                                      |
+| RF10 | Auditoría              | Cambios de padrón, credencial, permisos y asistencia registran actor y motivo                                                  |
+| RF11 | Reportes               | Resumen y detalle provienen del mismo snapshot/filtros; CSV/PDF coinciden                                                      |
+| RF12 | Recuperación           | Restaurar copia en BD aislada y reconciliar eventos/ACK sin duplicación                                                        |
+| RF13 | Manual                 | Solo operador autorizado; motivo obligatorio; no falsificar firma QR                                                           |
+| RF14 | Terminales             | Un administrador habilita/revoca terminal y entrada; cliente no se autoasigna permisos                                         |
+| RF15 | Contingencia           | Exportar pendientes sin marcarlos sincronizados; reimportación conserva IDs                                                    |
+| RF16 | PWA real               | Build de producción registra SW automáticamente; arranque offline frío tras instalación y ningún dato privado en Cache Storage |
+| RF17 | Integridad del comando | Reusar event_id con otro payload no devuelve la asistencia de otro alumno                                                      |
+| RF18 | Exportación completa   | Dataset sintético >80 filas sale completo en PDF/CSV, con conteo y snapshot coincidentes                                       |
+| RF19 | Salud en vivo          | Liveness/readiness no se prerenderizan ni usan timestamp estático; no incluyen PII                                             |
+| RF20 | Navegación segura      | Login solo redirige a destinos internos autorizados; javascript/data y URLs externas no se ejecutan                            |
 
 Objetivos no funcionales de piloto, todavía no medidos: captura local p95 ≤150 ms en terminal acordada; confirmación online p95 ≤2 s en red escolar; 10 eventos/s sostenidos durante 10 minutos y ráfaga de 30/s durante 30 s en pruebas con datos sintéticos. No son promesas de capacidad de un free tier. Si no caben en cuotas, reducir alcance o usar ruta local.
 
@@ -156,22 +166,22 @@ Es una organización lógica, no obligación de adoptar un gestor de monorepo co
 
 ## 6. Datos e invariantes
 
-| Entidad | Campos principales | Invariantes |
-|---|---|---|
-| schools | id, name, timezone, settings_version | Timezone IANA; inicialmente America/Lima |
-| profiles / memberships | auth_user_id, school_id, role, active | Rol administrado en servidor, no metadata editable por usuario |
-| students | id opaco, school_id, code, nombres, estado, photo_ref | Código institucional único por colegio; DNI opcional restringido |
-| enrollments | id, student_id, year, grade, section, schedule_id, vigencias | No superponer matrículas activas incompatibles |
-| schedules / calendar_days | ventanas, tolerancia entera, vigencia, feriados | Regla versionada y día escolar explícito |
-| credentials | id, student_id, kid, issued_at, expires_at, revoked_at | Una credencial revocada no vuelve a ser activa |
-| terminals / scanners | id, school_id, entrance_id, enabled, capabilities | Entrada autorizada por servidor; lector pertenece a terminal |
-| terminal_sessions | id, terminal_id, operator_id, expiry, revoked_at | Sesión temporal y revocable, sin secreto estático en frontend |
-| scan_receipts | terminal_id, event_id, payload_hash, result, received_at | UNIQUE(terminal_id,event_id); resultado final durable |
-| attendance_events | id, school_id, student_id, credential_id, terminal_id, direction, occurred_at, received_at, local_date, rule_version, disposition | Evento inmutable; FK y validación de pertenencia |
-| daily_attendance | enrollment_id, local_date, first_entry, last_exit, state, version | UNIQUE(enrollment_id,local_date); proyección reconstruible |
-| attendance_adjustments | event/day, actor, reason, before/after, created_at | Corrección append-only, no borrar historia |
-| notifications | target_user, event_id, state, created_at | Sin dependencia del canal externo |
-| audit_log | actor, action, entity, request_id, metadata_minimal, at | Sin contraseñas, tokens, QR completos ni PII innecesaria |
+| Entidad                   | Campos principales                                                                                                                | Invariantes                                                      |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| schools                   | id, name, timezone, settings_version                                                                                              | Timezone IANA; inicialmente America/Lima                         |
+| profiles / memberships    | auth_user_id, school_id, role, active                                                                                             | Rol administrado en servidor, no metadata editable por usuario   |
+| students                  | id opaco, school_id, code, nombres, estado, photo_ref                                                                             | Código institucional único por colegio; DNI opcional restringido |
+| enrollments               | id, student_id, year, grade, section, schedule_id, vigencias                                                                      | No superponer matrículas activas incompatibles                   |
+| schedules / calendar_days | ventanas, tolerancia entera, vigencia, feriados                                                                                   | Regla versionada y día escolar explícito                         |
+| credentials               | id, student_id, kid, issued_at, expires_at, revoked_at                                                                            | Una credencial revocada no vuelve a ser activa                   |
+| terminals / scanners      | id, school_id, entrance_id, enabled, capabilities                                                                                 | Entrada autorizada por servidor; lector pertenece a terminal     |
+| terminal_sessions         | id, terminal_id, operator_id, expiry, revoked_at                                                                                  | Sesión temporal y revocable, sin secreto estático en frontend    |
+| scan_receipts             | terminal_id, event_id, payload_hash, result, received_at                                                                          | UNIQUE(terminal_id,event_id); resultado final durable            |
+| attendance_events         | id, school_id, student_id, credential_id, terminal_id, direction, occurred_at, received_at, local_date, rule_version, disposition | Evento inmutable; FK y validación de pertenencia                 |
+| daily_attendance          | enrollment_id, local_date, first_entry, last_exit, state, version                                                                 | UNIQUE(enrollment_id,local_date); proyección reconstruible       |
+| attendance_adjustments    | event/day, actor, reason, before/after, created_at                                                                                | Corrección append-only, no borrar historia                       |
+| notifications             | target_user, event_id, state, created_at                                                                                          | Sin dependencia del canal externo                                |
+| audit_log                 | actor, action, entity, request_id, metadata_minimal, at                                                                           | Sin contraseñas, tokens, QR completos ni PII innecesaria         |
 
 Instantes se guardan como `timestamptz` UTC; fecha escolar se calcula con `America/Lima`, independientemente del host. `occurred_at` declarado por cliente y `received_at` de servidor se conservan ambos, junto con calidad temporal y desfase observado. Nunca sobrescribir uno con otro.
 
@@ -265,15 +275,15 @@ Política de redirect: permitir únicamente rutas conocidas (`/admin/dashboard`,
 
 ## 11. Seguridad, permisos y privacidad
 
-| Operación | Admin | Dirección | Secretaría | Portería |
-|---|---|---|---|---|
-| Usuarios/roles y terminales | Sí | Lectura de estado | No | Solo su sesión |
-| Padrón/matrícula | Sí | Lectura | Edición/importación | Mínimo de alumnos autorizados |
-| Emitir/revocar QR | Sí | Según delegación explícita | Sí | No |
-| Registrar QR/manual | Según permiso operativo | No por defecto | Manual con motivo | Sí, terminal asignada |
-| Corregir asistencia | Sí con motivo | Sí con motivo | Proponer corrección | No |
-| Reportes/exportación PII | Sí | Sí | Ámbito autorizado | No |
-| Auditoría y recuperación | Sí | Lectura limitada | No | Diagnóstico de su terminal |
+| Operación                   | Admin                   | Dirección                  | Secretaría          | Portería                      |
+| --------------------------- | ----------------------- | -------------------------- | ------------------- | ----------------------------- |
+| Usuarios/roles y terminales | Sí                      | Lectura de estado          | No                  | Solo su sesión                |
+| Padrón/matrícula            | Sí                      | Lectura                    | Edición/importación | Mínimo de alumnos autorizados |
+| Emitir/revocar QR           | Sí                      | Según delegación explícita | Sí                  | No                            |
+| Registrar QR/manual         | Según permiso operativo | No por defecto             | Manual con motivo   | Sí, terminal asignada         |
+| Corregir asistencia         | Sí con motivo           | Sí con motivo              | Proponer corrección | No                            |
+| Reportes/exportación PII    | Sí                      | Sí                         | Ámbito autorizado   | No                            |
+| Auditoría y recuperación    | Sí                      | Lectura limitada           | No                  | Diagnóstico de su terminal    |
 
 Aplicar controles en backend y RLS, no solo en UI. Deshabilitar registro público de usuarios; primer admin por procedimiento institucional. Con Supabase Auth elegir flujo de contraseña/aprovisionamiento administrativo sin depender de correos masivos gratuitos; recuperación mediante proceso seguro administrado hasta disponer de SMTP gratuito validado. Sesiones cortas para administración, renovación controlada y terminales revocables. Para SPA con tokens en navegador, documentar exposición a XSS: CSP estricta, sin scripts de terceros, sin HTML no confiable, dependencias mantenidas y borrado al salir. No afirmar protección HttpOnly si se elige almacenamiento cliente.
 
@@ -289,21 +299,21 @@ Definir con el colegio: finalidad, base legal/consentimiento aplicable, acceso d
 
 Mantener versión `/v1` y adaptador que resuelva la URL real de funciones cloud o API local. OpenAPI se genera desde contratos. Todas las operaciones con datos escolares requieren sesión y permisos.
 
-| Operación | Propósito |
-|---|---|
-| GET `/v1/health/live`, `/ready` | Liveness sin datos; readiness de dependencia con respuesta mínima y sin cache estática |
-| GET `/v1/terminal/bootstrap` | Configuración autorizada, claves públicas, snapshot/versiones y hora del servidor |
-| GET `/v1/students?cursor=...` | Búsqueda/padrón mínimo por ámbito |
-| POST `/v1/scans/batch` | Eventos y recibos individuales; un rechazo no pierde el resto del lote |
-| GET `/v1/scans/receipts?event_id=...` | Reconciliación tras timeout, limitada a terminal autorizada |
-| POST `/v1/manual-attendances` | Marcación manual con motivo y permiso |
-| POST `/v1/students/import/validate`, `/commit` | Preview y confirmación ligada al hash del archivo |
-| POST `/v1/credentials`, `/revoke` | Emisión y revocación auditadas |
-| GET `/v1/attendance/daily` | Proyección y filtros estables |
-| POST `/v1/attendance/adjustments` | Corrección inmutable con control de versión |
-| POST `/v1/reviews/{receipt_id}/resolve` | Adjudicación auditada con permiso, motivo e ID de operación nuevo; conserva recibo original |
-| GET `/v1/reports/snapshot` | Datos mínimos para PDF/CSV consistente |
-| POST `/v1/recovery/reconcile` | Importación de evidencia local firmada tras restauración, solo administrador y con preview |
+| Operación                                      | Propósito                                                                                   |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| GET `/v1/health/live`, `/ready`                | Liveness sin datos; readiness de dependencia con respuesta mínima y sin cache estática      |
+| GET `/v1/terminal/bootstrap`                   | Configuración autorizada, claves públicas, snapshot/versiones y hora del servidor           |
+| GET `/v1/students?cursor=...`                  | Búsqueda/padrón mínimo por ámbito                                                           |
+| POST `/v1/scans/batch`                         | Eventos y recibos individuales; un rechazo no pierde el resto del lote                      |
+| GET `/v1/scans/receipts?event_id=...`          | Reconciliación tras timeout, limitada a terminal autorizada                                 |
+| POST `/v1/manual-attendances`                  | Marcación manual con motivo y permiso                                                       |
+| POST `/v1/students/import/validate`, `/commit` | Preview y confirmación ligada al hash del archivo                                           |
+| POST `/v1/credentials`, `/revoke`              | Emisión y revocación auditadas                                                              |
+| GET `/v1/attendance/daily`                     | Proyección y filtros estables                                                               |
+| POST `/v1/attendance/adjustments`              | Corrección inmutable con control de versión                                                 |
+| POST `/v1/reviews/{receipt_id}/resolve`        | Adjudicación auditada con permiso, motivo e ID de operación nuevo; conserva recibo original |
+| GET `/v1/reports/snapshot`                     | Datos mínimos para PDF/CSV consistente                                                      |
+| POST `/v1/recovery/reconcile`                  | Importación de evidencia local firmada tras restauración, solo administrador y con preview  |
 
 Ejemplo de comando por evento:
 
@@ -332,18 +342,18 @@ Respuesta individual: `{event_id,payload_hash,receipt_id,disposition:"ACCEPTED|R
 
 Consulta: 16 de noviembre de 2026. Se recuperaron archivos de los repositorios oficiales indicados en la sección 19; cifras publicadas, no medición de una cuenta ni compromiso comercial. Verificar otra vez al provisionar y después de cambios de plan.
 
-| Recurso | Cuota documentada para Free | Consecuencia de diseño |
-|---|---|---|
-| Supabase proyectos | Dos proyectos gratuitos, límite según organizaciones donde se es Owner/Administrator | Un piloto y un entorno de prueba si la cuenta lo permite; no asumir proyectos gratis ilimitados |
-| Supabase base de datos | 500 MB por proyecto | Es el límite decisivo para eventos, recibos, índices y auditoría; no confundir con Storage |
-| Supabase egress | 5 GB en la tabla de cuotas; guía de egress distingue 5 GB uncached / 5 GB cached | Presupuestar por tipo; no sumar como 10 GB fungibles ni asumir DB/API cacheadas |
-| Supabase Auth | 50.000 MAU | Suficiente en hipótesis para operadores; no evita límites de email/Auth |
-| Supabase Storage | 1 GB | No amplía la BD PostgreSQL; fotos deshabilitadas inicialmente |
-| Supabase Edge Functions | 500.000 invocaciones por período mensual de cuota | Batch y consultas acotadas; incluir bootstrap/reportes y reintentos |
-| Runtime Edge Functions | 256 MB, 2 s de CPU/request, 150 s wall-clock Free | No ejecutar PDF pesado ni grandes importaciones síncronas; máximo no es objetivo de latencia |
-| Cloudflare Pages builds | 500 builds/mes, uno simultáneo en Free; timeout 20 min | Agrupar cambios; separar tests locales de deploy |
-| Cloudflare Pages assets | 20.000 archivos y 25 MiB por archivo | Build estático pequeño; no alojar dumps ni reportes privados como assets |
-| Cloudflare Workers, si se añadieran | 100.000 requests/día, 10 ms CPU/invocación | No es el backend elegido; no confundir sus límites con Supabase |
+| Recurso                             | Cuota documentada para Free                                                          | Consecuencia de diseño                                                                          |
+| ----------------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| Supabase proyectos                  | Dos proyectos gratuitos, límite según organizaciones donde se es Owner/Administrator | Un piloto y un entorno de prueba si la cuenta lo permite; no asumir proyectos gratis ilimitados |
+| Supabase base de datos              | 500 MB por proyecto                                                                  | Es el límite decisivo para eventos, recibos, índices y auditoría; no confundir con Storage      |
+| Supabase egress                     | 5 GB en la tabla de cuotas; guía de egress distingue 5 GB uncached / 5 GB cached     | Presupuestar por tipo; no sumar como 10 GB fungibles ni asumir DB/API cacheadas                 |
+| Supabase Auth                       | 50.000 MAU                                                                           | Suficiente en hipótesis para operadores; no evita límites de email/Auth                         |
+| Supabase Storage                    | 1 GB                                                                                 | No amplía la BD PostgreSQL; fotos deshabilitadas inicialmente                                   |
+| Supabase Edge Functions             | 500.000 invocaciones por período mensual de cuota                                    | Batch y consultas acotadas; incluir bootstrap/reportes y reintentos                             |
+| Runtime Edge Functions              | 256 MB, 2 s de CPU/request, 150 s wall-clock Free                                    | No ejecutar PDF pesado ni grandes importaciones síncronas; máximo no es objetivo de latencia    |
+| Cloudflare Pages builds             | 500 builds/mes, uno simultáneo en Free; timeout 20 min                               | Agrupar cambios; separar tests locales de deploy                                                |
+| Cloudflare Pages assets             | 20.000 archivos y 25 MiB por archivo                                                 | Build estático pequeño; no alojar dumps ni reportes privados como assets                        |
+| Cloudflare Workers, si se añadieran | 100.000 requests/día, 10 ms CPU/invocación                                           | No es el backend elegido; no confundir sus límites con Supabase                                 |
 
 La guía de producción de Supabase advierte que puede pausar proyectos Free con baja actividad durante siete días y que sus backups no están disponibles para descargar en Free. La guía de backups recomienda exportaciones propias y copias fuera del proveedor. Planificar vacaciones y restauración manual: no sustituir un plan de continuidad por tráfico artificial para evitar pausas. Edge Functions no permite conexiones salientes a puertos 25/587; no diseñar envío SMTP directo desde esas funciones.
 
@@ -377,18 +387,18 @@ Runbooks mínimos: servidor caído, proveedor pausado, cuota agotada, terminal p
 
 ## 15. Pruebas y criterios de salida
 
-| Capa | Casos obligatorios |
-|---|---|
-| Dominio | Bordes 07:00/07:10/07:10:01, tarde/noche, feriado, suspensión, egreso, entrada/salida, justificación, medianoche UTC vs Lima |
-| IndexedDB | BD nueva, migraciones desde 1/2/3 parciales, stores faltantes, versionchange, dos pestañas, cuota, cola pendiente durante upgrade |
-| Sincronización | Timeout antes/después de commit, 401/403/409/429/503, respuesta corrupta, ACK de otro hash, reintentos y cierre durante envío |
-| PostgreSQL | Mismo ID simultáneo, ID con otro payload, dos entradas simultáneas al mismo alumno, rollback sin ACK, RLS cruzada |
-| Seguridad | Acceso anónimo, escalamiento de rol, terminal revocada, invocación directa de RPC y escritura de tablas con JWT cliente, QR alterado/expirado/revocado/kid desconocido, XSS en importación/redirect de login, CORS/CSRF según modo |
-| E2E | Alta/importación → emisión → escaneo → ACK → dashboard → reporte; offline/reinicio/reconexión; búsqueda manual y revisión |
-| PWA | Registro real desde el build compilado y controller activo, shell frío offline, assets actualizados, logout sin datos privados cacheados, actualización con pendientes |
-| Hardware | Cada modelo, prefijos, teclado nacional, foco manual, lectura incompleta y simultánea; no certificar canales sin ensayo |
-| Operación | Backup/restore, reconciliación tras restore, cambio de origen con pendientes, agotamiento de cuota |
-| Carga/accesibilidad | Objetivos p95 y tasa acordados, teclado/zoom/contraste/lector pantalla, PDF/CSV de 100 y 1.000 filas completos, snapshot por fecha, destinatarios y estados recuperables |
+| Capa                | Casos obligatorios                                                                                                                                                                                                                 |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dominio             | Bordes 07:00/07:10/07:10:01, tarde/noche, feriado, suspensión, egreso, entrada/salida, justificación, medianoche UTC vs Lima                                                                                                       |
+| IndexedDB           | BD nueva, migraciones desde 1/2/3 parciales, stores faltantes, versionchange, dos pestañas, cuota, cola pendiente durante upgrade                                                                                                  |
+| Sincronización      | Timeout antes/después de commit, 401/403/409/429/503, respuesta corrupta, ACK de otro hash, reintentos y cierre durante envío                                                                                                      |
+| PostgreSQL          | Mismo ID simultáneo, ID con otro payload, dos entradas simultáneas al mismo alumno, rollback sin ACK, RLS cruzada                                                                                                                  |
+| Seguridad           | Acceso anónimo, escalamiento de rol, terminal revocada, invocación directa de RPC y escritura de tablas con JWT cliente, QR alterado/expirado/revocado/kid desconocido, XSS en importación/redirect de login, CORS/CSRF según modo |
+| E2E                 | Alta/importación → emisión → escaneo → ACK → dashboard → reporte; offline/reinicio/reconexión; búsqueda manual y revisión                                                                                                          |
+| PWA                 | Registro real desde el build compilado y controller activo, shell frío offline, assets actualizados, logout sin datos privados cacheados, actualización con pendientes                                                             |
+| Hardware            | Cada modelo, prefijos, teclado nacional, foco manual, lectura incompleta y simultánea; no certificar canales sin ensayo                                                                                                            |
+| Operación           | Backup/restore, reconciliación tras restore, cambio de origen con pendientes, agotamiento de cuota                                                                                                                                 |
+| Carga/accesibilidad | Objetivos p95 y tasa acordados, teclado/zoom/contraste/lector pantalla, PDF/CSV de 100 y 1.000 filas completos, snapshot por fecha, destinatarios y estados recuperables                                                           |
 
 CI propuesta: Node 24 LTS fijado a una versión mantenida, tipos compatibles y gestores alineados; npm ci sin flags de ignorar peers después de corregir dependencias; typecheck, lint, unit, integración con Postgres, build estático y Playwright smoke. El resultado actual con dependencias retenidas no demuestra npm ci limpio: el dry-run falla. Declarar Playwright y configuración en el proyecto cuando se implementen E2E, sin depender de la instalación global del entorno. E2E completo y carga pueden ejecutarse localmente para respetar cuota.
 
@@ -398,16 +408,18 @@ Salida a piloto: F01–F07, F10, F23, F24 y F30 cerrados con pruebas; dependenci
 
 ## 16. Migración y backlog por fases
 
+Estado de esta entrega: fase 1 conservada y validada; fase 2 implementada; fase 3 implementada en software, con gate de compatibilidad física abierto; fase 4 implementada y probada; fase 5 implementada para copias, restore, seguridad y carga sintética, con piloto/acta institucional pendientes. La tabla conserva la planificación original y sus criterios de salida, no declara ejecutado un piloto.
+
 Estimaciones orientativas para una persona con experiencia: 8–12 semanas de trabajo, sin fechas comprometidas; integración de hardware no estándar o depuración de proveedores puede ampliar plazo. No son costos de servicios ni sustituyen un plan tras conocer hardware y padrón.
 
-| Fase | Entregable | Dependencias | Esfuerzo orientativo | Salida verificable |
-|---|---|---|---|---|
-| 0 | Inventario real, política escolar, spike hardware/exportación Next y elegibilidad gratis | Ninguna | 2–4 días | ADR de despliegue y viabilidad de varios lectores acordados |
-| 1 | Toolchain mantenida, contratos, esquema IndexedDB y outbox | 0 | 5–8 días | Migraciones y fallos de red sin pérdida |
-| 2 | PostgreSQL, auth, RBAC/RLS, transacción/ACK, retiro de demo | Contratos de 1 | 7–10 días | Concurrencia y acceso no autorizado probados |
-| 3 | Reglas de jornada, JWS, terminales, sincronización/revisión y adaptador de varios lectores si es viable | 1–2, spike de 0 | 7–10 días base; adaptador por estimar | Flujo completo y revocación probados; alcance hardware explícito |
-| 4 | Importación, panel, correcciones, PDF/CSV, PWA/accesibilidad | 2–3 | 6–9 días | E2E y reportes consistentes |
-| 5 | Backups, restauración, seguridad, carga y piloto | 1–4 | 6–10 días + piloto | Acta de aceptación y contingencia ensayada |
+| Fase | Entregable                                                                                              | Dependencias    | Esfuerzo orientativo                  | Salida verificable                                               |
+| ---- | ------------------------------------------------------------------------------------------------------- | --------------- | ------------------------------------- | ---------------------------------------------------------------- |
+| 0    | Inventario real, política escolar, spike hardware/exportación Next y elegibilidad gratis                | Ninguna         | 2–4 días                              | ADR de despliegue y viabilidad de varios lectores acordados      |
+| 1    | Toolchain mantenida, contratos, esquema IndexedDB y outbox                                              | 0               | 5–8 días                              | Migraciones y fallos de red sin pérdida                          |
+| 2    | PostgreSQL, auth, RBAC/RLS, transacción/ACK, retiro de demo                                             | Contratos de 1  | 7–10 días                             | Concurrencia y acceso no autorizado probados                     |
+| 3    | Reglas de jornada, JWS, terminales, sincronización/revisión y adaptador de varios lectores si es viable | 1–2, spike de 0 | 7–10 días base; adaptador por estimar | Flujo completo y revocación probados; alcance hardware explícito |
+| 4    | Importación, panel, correcciones, PDF/CSV, PWA/accesibilidad                                            | 2–3             | 6–9 días                              | E2E y reportes consistentes                                      |
+| 5    | Backups, restauración, seguridad, carga y piloto                                                        | 1–4             | 6–10 días + piloto                    | Acta de aceptación y contingencia ensayada                       |
 
 Mantener rama de desarrollo y cambios pequeños revisables. Migrar fixtures demo a test; no importar mocks como datos productivos. Durante transición, un adaptador permite probar la UI contra contratos nuevos, pero solo existe un backend escritor por entorno. Convertir dependencias de servidor de Next una a una y probar exportación; no publicar un frontend estático que siga apuntando a rutas Next desaparecidas. Si el spike elige Vite, presupuestar aparte la migración de routing/layouts; si elige equipo local, presupuestar adaptador de identidad y servicio de backup. Esas rutas no son conmutadores ya implementados.
 
@@ -417,26 +429,26 @@ Rollback: conservar versión de frontend anterior compatible con el contrato, mi
 
 ## 17. Trazabilidad de correcciones
 
-| Hallazgos del análisis | Diseño/entregable que los cierra | Evidencia exigida |
-|---|---|---|
-| F01, F12 | Esquema único, UUID único y lease | Migraciones parciales y dos pestañas |
-| F02, F03, F07 | Outbox + transacción + recibo | Timeout tras commit, restart y restore |
-| F04, F05, F06, F13 | QR firmado, Auth, RBAC/RLS y terminales | Matriz negativa de acceso y revocaciones |
-| F08, F09, F15 | Dominio escolar y proyección | Casos horarios/calendario/estados |
-| F10 | SW restringido y shell estático | Reinicio offline y privacidad tras logout |
-| F11, F17 | Parser único, capacidad física comprobada y dry-run | Hardware sin atribución inventada ni efectos de prueba |
-| F14, F16, F21 | Repositorio de alumnos y contratos | Búsqueda real, paginación, 400/422 y metadatos correctos |
-| F18 | Toolchain y CI reproducibles | npm ci limpio y pipeline local/remota |
-| F19 | Accesibilidad y responsive | Teclado, zoom, foco y contraste |
-| F20 | Bandeja interna y estados reales de entrega | Simulación nunca reportada como entrega |
-| F22 | Gestión, auditoría, backups y runbooks | Ensayo integral y restauración |
-| F23 | Registro explícito del SW en componente cliente | Build producción registra y controla la página sin intervención de consola |
-| F24 | Clave terminal/evento y hash canónico | Mismo ID/distinto alumno devuelve conflicto, no ACK anterior |
-| F25, F27 | Snapshot de reporte, PDF completo y UX de recuperación | >80 filas, fecha elegida, logout y recuperación de error |
-| F26 | Health dinámico no-store | Peticiones de producción sin HIT estático ni timestamp de build |
-| F28 | Versiones mantenidas y triage de advisories | Instalación limpia, audit revisado y ausencia de riesgos altos sin resolver en superficie usada |
-| F29 | Artefacto trazable y despliegue separado | Prueba de entrega/rollback sin VPS pagado por defecto |
-| F30 | Allowlist de redirect tras login | javascript/data/URL externa rechazados y marcador DOM nunca ejecutado |
+| Hallazgos del análisis | Diseño/entregable que los cierra                       | Evidencia exigida                                                                               |
+| ---------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| F01, F12               | Esquema único, UUID único y lease                      | Migraciones parciales y dos pestañas                                                            |
+| F02, F03, F07          | Outbox + transacción + recibo                          | Timeout tras commit, restart y restore                                                          |
+| F04, F05, F06, F13     | QR firmado, Auth, RBAC/RLS y terminales                | Matriz negativa de acceso y revocaciones                                                        |
+| F08, F09, F15          | Dominio escolar y proyección                           | Casos horarios/calendario/estados                                                               |
+| F10                    | SW restringido y shell estático                        | Reinicio offline y privacidad tras logout                                                       |
+| F11, F17               | Parser único, capacidad física comprobada y dry-run    | Hardware sin atribución inventada ni efectos de prueba                                          |
+| F14, F16, F21          | Repositorio de alumnos y contratos                     | Búsqueda real, paginación, 400/422 y metadatos correctos                                        |
+| F18                    | Toolchain y CI reproducibles                           | npm ci limpio y pipeline local/remota                                                           |
+| F19                    | Accesibilidad y responsive                             | Teclado, zoom, foco y contraste                                                                 |
+| F20                    | Bandeja interna y estados reales de entrega            | Simulación nunca reportada como entrega                                                         |
+| F22                    | Gestión, auditoría, backups y runbooks                 | Ensayo integral y restauración                                                                  |
+| F23                    | Registro explícito del SW en componente cliente        | Build producción registra y controla la página sin intervención de consola                      |
+| F24                    | Clave terminal/evento y hash canónico                  | Mismo ID/distinto alumno devuelve conflicto, no ACK anterior                                    |
+| F25, F27               | Snapshot de reporte, PDF completo y UX de recuperación | >80 filas, fecha elegida, logout y recuperación de error                                        |
+| F26                    | Health dinámico no-store                               | Peticiones de producción sin HIT estático ni timestamp de build                                 |
+| F28                    | Versiones mantenidas y triage de advisories            | Instalación limpia, audit revisado y ausencia de riesgos altos sin resolver en superficie usada |
+| F29                    | Artefacto trazable y despliegue separado               | Prueba de entrega/rollback sin VPS pagado por defecto                                           |
+| F30                    | Allowlist de redirect tras login                       | javascript/data/URL externa rechazados y marcador DOM nunca ejecutado                           |
 
 ## 18. Decisiones pendientes que no bloquean el desarrollo local
 

@@ -1,0 +1,551 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-17T00:36:16Z",
+  "title": "Design System: SCA-QR",
+  "extensions": {
+    "colorMeta": {
+      "page": {
+        "role": "neutral",
+        "displayName": "Fondo de jornada",
+        "tonalRamp": [
+          "oklch(15% 0.0029 264.54)",
+          "oklch(27% 0.0029 264.54)",
+          "oklch(39% 0.0029 264.54)",
+          "oklch(51% 0.0029 264.54)",
+          "oklch(63% 0.0029 264.54)",
+          "oklch(75% 0.0029 264.54)",
+          "oklch(87% 0.0029 264.54)",
+          "oklch(95% 0.0029 264.54)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Superficie blanca",
+        "tonalRamp": [
+          "oklch(15% 0.0000 0.00)",
+          "oklch(27% 0.0000 0.00)",
+          "oklch(39% 0.0000 0.00)",
+          "oklch(51% 0.0000 0.00)",
+          "oklch(63% 0.0000 0.00)",
+          "oklch(75% 0.0000 0.00)",
+          "oklch(87% 0.0000 0.00)",
+          "oklch(95% 0.0000 0.00)"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Texto principal",
+        "tonalRamp": [
+          "oklch(15% 0.0124 160.40)",
+          "oklch(27% 0.0124 160.40)",
+          "oklch(39% 0.0124 160.40)",
+          "oklch(51% 0.0124 160.40)",
+          "oklch(63% 0.0124 160.40)",
+          "oklch(75% 0.0124 160.40)",
+          "oklch(87% 0.0124 160.40)",
+          "oklch(95% 0.0124 160.40)"
+        ]
+      },
+      "secondary": {
+        "role": "neutral",
+        "displayName": "Texto secundario",
+        "tonalRamp": [
+          "oklch(15% 0.0137 161.63)",
+          "oklch(27% 0.0137 161.63)",
+          "oklch(39% 0.0137 161.63)",
+          "oklch(51% 0.0137 161.63)",
+          "oklch(63% 0.0137 161.63)",
+          "oklch(75% 0.0137 161.63)",
+          "oklch(87% 0.0137 161.63)",
+          "oklch(95% 0.0137 161.63)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Texto auxiliar",
+        "tonalRamp": [
+          "oklch(15% 0.0162 162.07)",
+          "oklch(27% 0.0162 162.07)",
+          "oklch(39% 0.0162 162.07)",
+          "oklch(51% 0.0162 162.07)",
+          "oklch(63% 0.0162 162.07)",
+          "oklch(75% 0.0162 162.07)",
+          "oklch(87% 0.0162 162.07)",
+          "oklch(95% 0.0162 162.07)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Divisor",
+        "tonalRamp": [
+          "oklch(15% 0.0076 151.88)",
+          "oklch(27% 0.0076 151.88)",
+          "oklch(39% 0.0076 151.88)",
+          "oklch(51% 0.0076 151.88)",
+          "oklch(63% 0.0076 151.88)",
+          "oklch(75% 0.0076 151.88)",
+          "oklch(87% 0.0076 151.88)",
+          "oklch(95% 0.0076 151.88)"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Verde de operación",
+        "tonalRamp": [
+          "oklch(15% 0.0897 163.11)",
+          "oklch(27% 0.0897 163.11)",
+          "oklch(39% 0.0897 163.11)",
+          "oklch(51% 0.0897 163.11)",
+          "oklch(63% 0.0897 163.11)",
+          "oklch(75% 0.0897 163.11)",
+          "oklch(87% 0.0897 163.11)",
+          "oklch(95% 0.0897 163.11)"
+        ]
+      },
+      "accent-hover": {
+        "role": "primary",
+        "displayName": "Verde de interacción",
+        "tonalRamp": [
+          "oklch(15% 0.0818 159.67)",
+          "oklch(27% 0.0818 159.67)",
+          "oklch(39% 0.0818 159.67)",
+          "oklch(51% 0.0818 159.67)",
+          "oklch(63% 0.0818 159.67)",
+          "oklch(75% 0.0818 159.67)",
+          "oklch(87% 0.0818 159.67)",
+          "oklch(95% 0.0818 159.67)"
+        ]
+      },
+      "accent-soft": {
+        "role": "primary",
+        "displayName": "Verde suave",
+        "tonalRamp": [
+          "oklch(15% 0.0116 162.05)",
+          "oklch(27% 0.0116 162.05)",
+          "oklch(39% 0.0116 162.05)",
+          "oklch(51% 0.0116 162.05)",
+          "oklch(63% 0.0116 162.05)",
+          "oklch(75% 0.0116 162.05)",
+          "oklch(87% 0.0116 162.05)",
+          "oklch(95% 0.0116 162.05)"
+        ]
+      },
+      "danger": {
+        "role": "error",
+        "displayName": "Rojo de error",
+        "tonalRamp": [
+          "oklch(15% 0.1571 23.48)",
+          "oklch(27% 0.1571 23.48)",
+          "oklch(39% 0.1571 23.48)",
+          "oklch(51% 0.1571 23.48)",
+          "oklch(63% 0.1571 23.48)",
+          "oklch(75% 0.1571 23.48)",
+          "oklch(87% 0.1571 23.48)",
+          "oklch(95% 0.1571 23.48)"
+        ]
+      },
+      "danger-soft": {
+        "role": "error",
+        "displayName": "Error suave",
+        "tonalRamp": [
+          "oklch(15% 0.0151 17.42)",
+          "oklch(27% 0.0151 17.42)",
+          "oklch(39% 0.0151 17.42)",
+          "oklch(51% 0.0151 17.42)",
+          "oklch(63% 0.0151 17.42)",
+          "oklch(75% 0.0151 17.42)",
+          "oklch(87% 0.0151 17.42)",
+          "oklch(95% 0.0151 17.42)"
+        ]
+      },
+      "warning": {
+        "role": "warning",
+        "displayName": "Ámbar de revisión",
+        "tonalRamp": [
+          "oklch(15% 0.1030 72.91)",
+          "oklch(27% 0.1030 72.91)",
+          "oklch(39% 0.1030 72.91)",
+          "oklch(51% 0.1030 72.91)",
+          "oklch(63% 0.1030 72.91)",
+          "oklch(75% 0.1030 72.91)",
+          "oklch(87% 0.1030 72.91)",
+          "oklch(95% 0.1030 72.91)"
+        ]
+      },
+      "warning-soft": {
+        "role": "warning",
+        "displayName": "Advertencia suave",
+        "tonalRamp": [
+          "oklch(15% 0.0256 84.59)",
+          "oklch(27% 0.0256 84.59)",
+          "oklch(39% 0.0256 84.59)",
+          "oklch(51% 0.0256 84.59)",
+          "oklch(63% 0.0256 84.59)",
+          "oklch(75% 0.0256 84.59)",
+          "oklch(87% 0.0256 84.59)",
+          "oklch(95% 0.0256 84.59)"
+        ]
+      },
+      "focus": {
+        "role": "focus",
+        "displayName": "Azul de foco",
+        "tonalRamp": [
+          "oklch(15% 0.1433 253.01)",
+          "oklch(27% 0.1433 253.01)",
+          "oklch(39% 0.1433 253.01)",
+          "oklch(51% 0.1433 253.01)",
+          "oklch(63% 0.1433 253.01)",
+          "oklch(75% 0.1433 253.01)",
+          "oklch(87% 0.1433 253.01)",
+          "oklch(95% 0.1433 253.01)"
+        ]
+      },
+      "field-border": {
+        "role": "neutral",
+        "displayName": "Borde de campo",
+        "tonalRamp": [
+          "oklch(15% 0.0136 152.57)",
+          "oklch(27% 0.0136 152.57)",
+          "oklch(39% 0.0136 152.57)",
+          "oklch(51% 0.0136 152.57)",
+          "oklch(63% 0.0136 152.57)",
+          "oklch(75% 0.0136 152.57)",
+          "oklch(87% 0.0136 152.57)",
+          "oklch(95% 0.0136 152.57)"
+        ]
+      },
+      "button-border": {
+        "role": "neutral",
+        "displayName": "Borde de botón",
+        "tonalRamp": [
+          "oklch(15% 0.0119 153.64)",
+          "oklch(27% 0.0119 153.64)",
+          "oklch(39% 0.0119 153.64)",
+          "oklch(51% 0.0119 153.64)",
+          "oklch(63% 0.0119 153.64)",
+          "oklch(75% 0.0119 153.64)",
+          "oklch(87% 0.0119 153.64)",
+          "oklch(95% 0.0119 153.64)"
+        ]
+      },
+      "control-hover": {
+        "role": "neutral",
+        "displayName": "Interacción suave",
+        "tonalRamp": [
+          "oklch(15% 0.0075 151.89)",
+          "oklch(27% 0.0075 151.89)",
+          "oklch(39% 0.0075 151.89)",
+          "oklch(51% 0.0075 151.89)",
+          "oklch(63% 0.0075 151.89)",
+          "oklch(75% 0.0075 151.89)",
+          "oklch(87% 0.0075 151.89)",
+          "oklch(95% 0.0075 151.89)"
+        ]
+      },
+      "neutral-soft": {
+        "role": "neutral",
+        "displayName": "Aviso informativo",
+        "tonalRamp": [
+          "oklch(15% 0.0069 247.90)",
+          "oklch(27% 0.0069 247.90)",
+          "oklch(39% 0.0069 247.90)",
+          "oklch(51% 0.0069 247.90)",
+          "oklch(63% 0.0069 247.90)",
+          "oklch(75% 0.0069 247.90)",
+          "oklch(87% 0.0069 247.90)",
+          "oklch(95% 0.0069 247.90)"
+        ]
+      },
+      "neutral-text": {
+        "role": "neutral",
+        "displayName": "Texto informativo",
+        "tonalRamp": [
+          "oklch(15% 0.0475 245.74)",
+          "oklch(27% 0.0475 245.74)",
+          "oklch(39% 0.0475 245.74)",
+          "oklch(51% 0.0475 245.74)",
+          "oklch(63% 0.0475 245.74)",
+          "oklch(75% 0.0475 245.74)",
+          "oklch(87% 0.0475 245.74)",
+          "oklch(95% 0.0475 245.74)"
+        ]
+      },
+      "badge-success-text": {
+        "role": "neutral",
+        "displayName": "Etiqueta confirmada",
+        "tonalRamp": [
+          "oklch(15% 0.0885 158.69)",
+          "oklch(27% 0.0885 158.69)",
+          "oklch(39% 0.0885 158.69)",
+          "oklch(51% 0.0885 158.69)",
+          "oklch(63% 0.0885 158.69)",
+          "oklch(75% 0.0885 158.69)",
+          "oklch(87% 0.0885 158.69)",
+          "oklch(95% 0.0885 158.69)"
+        ]
+      },
+      "badge-warning-text": {
+        "role": "warning",
+        "displayName": "Etiqueta de revisión",
+        "tonalRamp": [
+          "oklch(15% 0.0997 73.11)",
+          "oklch(27% 0.0997 73.11)",
+          "oklch(39% 0.0997 73.11)",
+          "oklch(51% 0.0997 73.11)",
+          "oklch(63% 0.0997 73.11)",
+          "oklch(75% 0.0997 73.11)",
+          "oklch(87% 0.0997 73.11)",
+          "oklch(95% 0.0997 73.11)"
+        ]
+      },
+      "badge-danger-text": {
+        "role": "error",
+        "displayName": "Etiqueta de error",
+        "tonalRamp": [
+          "oklch(15% 0.1441 22.05)",
+          "oklch(27% 0.1441 22.05)",
+          "oklch(39% 0.1441 22.05)",
+          "oklch(51% 0.1441 22.05)",
+          "oklch(63% 0.1441 22.05)",
+          "oklch(75% 0.1441 22.05)",
+          "oklch(87% 0.1441 22.05)",
+          "oklch(95% 0.1441 22.05)"
+        ]
+      },
+      "badge-neutral-soft": {
+        "role": "neutral",
+        "displayName": "Etiqueta neutra",
+        "tonalRamp": [
+          "oklch(15% 0.0042 236.50)",
+          "oklch(27% 0.0042 236.50)",
+          "oklch(39% 0.0042 236.50)",
+          "oklch(51% 0.0042 236.50)",
+          "oklch(63% 0.0042 236.50)",
+          "oklch(75% 0.0042 236.50)",
+          "oklch(87% 0.0042 236.50)",
+          "oklch(95% 0.0042 236.50)"
+        ]
+      },
+      "badge-neutral-text": {
+        "role": "neutral",
+        "displayName": "Texto neutro",
+        "tonalRamp": [
+          "oklch(15% 0.0205 163.97)",
+          "oklch(27% 0.0205 163.97)",
+          "oklch(39% 0.0205 163.97)",
+          "oklch(51% 0.0205 163.97)",
+          "oklch(63% 0.0205 163.97)",
+          "oklch(75% 0.0205 163.97)",
+          "oklch(87% 0.0205 163.97)",
+          "oklch(95% 0.0205 163.97)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Título de la portada pública; 38 px en móvil."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Mensaje lateral de acceso; 30 px hasta 950 px y bloque oculto hasta 760 px."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Título administrativo; 25 px en móvil, acceso y portería."
+      },
+      "section": {
+        "displayName": "Section",
+        "purpose": "Encabezados de superficies de trabajo."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Texto base de la aplicación."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Etiquetas, botones y navegación."
+      },
+      "table": {
+        "displayName": "Table",
+        "purpose": "Filas de datos; cifras tabulares en tabla."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Metadatos compactos; cabeceras con peso 500."
+      },
+      "metric": {
+        "displayName": "Metric",
+        "purpose": "Cifras del resumen; 28 px hasta 950 px y 30 px hasta 760 px."
+      }
+    },
+    "shadows": [
+      {
+        "name": "dialog",
+        "value": "0 24px 80px #203a2929",
+        "purpose": "Única sombra observada: diálogo nativo superpuesto, no superficies de trabajo."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-transition",
+        "value": "background-color 140ms, color 140ms, border-color 140ms",
+        "purpose": "Botones y navegación; hover solo con puntero fino y capacidad de hover."
+      },
+      {
+        "name": "pressed-button",
+        "value": "scale(0.985)",
+        "purpose": "Pulsación de botones; desactivada con movimiento reducido."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "@media (prefers-reduced-motion: reduce) { animation: none !important; transition: none !important; scroll-behavior: auto !important; }",
+        "purpose": "Sin animaciones, transiciones ni escala de pulsación cuando se solicita movimiento reducido."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "wide",
+        "value": "1600px"
+      },
+      {
+        "name": "compact-desktop",
+        "value": "1200px"
+      },
+      {
+        "name": "tablet",
+        "value": "950px"
+      },
+      {
+        "name": "mobile",
+        "value": "760px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón principal",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal de la tarea; pulsación y foco visibles.",
+      "html": "<button type=\"button\" class=\"ds-primary\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"M12 5v14\"/></svg>Nuevo alumno</button>",
+      "css": ".ds-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;padding:9px 14px;min-height:38px;border-radius:7px;font-family:\"Public Sans Variable\", \"Public Sans\", sans-serif;font-size:12px;font-weight:500;line-height:1.55;background:var(--accent, #1a694b);color:var(--surface, #fff);white-space:nowrap;cursor:pointer;transition:background-color 140ms,color 140ms,border-color 140ms}.ds-primary:focus-visible{outline:3px solid var(--focus, #236fbe);outline-offset:3px;}@media(hover:hover) and (pointer:fine){.ds-primary:hover{background:var(--accent-hover, #115437);}}.ds-primary:active:not(:disabled){transform:scale(0.985)}.ds-primary:disabled{cursor:not-allowed;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none}.ds-primary:active:not(:disabled){transform:none}}"
+    },
+    {
+      "name": "Botón secundario",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Acción de apoyo sobre superficie blanca, con borde.",
+      "html": "<button type=\"button\" class=\"ds-secondary\">Cancelar</button>",
+      "css": ".ds-secondary{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid #cfd7d1;padding:9px 14px;min-height:38px;border-radius:7px;font-family:\"Public Sans Variable\", \"Public Sans\", sans-serif;font-size:12px;font-weight:500;line-height:1.55;background:var(--surface, #fff);color:var(--text, #202723);white-space:nowrap;cursor:pointer;transition:background-color 140ms,color 140ms,border-color 140ms}.ds-secondary:focus-visible{outline:3px solid var(--focus, #236fbe);outline-offset:3px;}@media(hover:hover) and (pointer:fine){.ds-secondary:hover{background:#edf2ee;}}.ds-secondary:active:not(:disabled){transform:scale(0.985)}.ds-secondary:disabled{cursor:not-allowed;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-secondary{transition:none}.ds-secondary:active:not(:disabled){transform:none}}"
+    },
+    {
+      "name": "Botón discreto",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "Acción de navegación secundaria, observada en la portada.",
+      "html": "<button type=\"button\" class=\"ds-quiet\">Abrir panel</button>",
+      "css": ".ds-quiet{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;padding:9px 14px;min-height:38px;border-radius:7px;font-family:\"Public Sans Variable\", \"Public Sans\", sans-serif;font-size:12px;font-weight:500;line-height:1.55;background:transparent;color:var(--secondary, #58615c);white-space:nowrap;cursor:pointer;transition:background-color 140ms,color 140ms,border-color 140ms}.ds-quiet:focus-visible{outline:3px solid var(--focus, #236fbe);outline-offset:3px;}@media(hover:hover) and (pointer:fine){.ds-quiet:hover{background:#edf2ee;color:var(--text, #202723);}}.ds-quiet:active:not(:disabled){transform:scale(0.985)}.ds-quiet:disabled{cursor:not-allowed;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-quiet{transition:none}.ds-quiet:active:not(:disabled){transform:none}}"
+    },
+    {
+      "name": "Botón de icono",
+      "kind": "button",
+      "refersTo": "button-icon",
+      "description": "Control compacto con nombre accesible; cerrar editor.",
+      "html": "<button type=\"button\" class=\"ds-icon\" aria-label=\"Cerrar formulario\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M18 6 6 18\"/><path d=\"m6 6 12 12\"/></svg></button>",
+      "css": ".ds-icon{display:inline-grid;place-items:center;border:0;border-radius:6px;background:transparent;color:var(--secondary, #58615c);width:34px;height:34px;cursor:pointer;transition:background-color 140ms,color 140ms,border-color 140ms}.ds-icon:focus-visible{outline:3px solid var(--focus, #236fbe);outline-offset:3px;}@media(hover:hover) and (pointer:fine){.ds-icon:hover{background:#edf2ee;}}.ds-icon:active:not(:disabled){transform:scale(0.985)}.ds-icon:disabled{cursor:not-allowed;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-icon{transition:none}.ds-icon:active:not(:disabled){transform:none}}"
+    },
+    {
+      "name": "Enlace de acción",
+      "kind": "button",
+      "refersTo": "button-text",
+      "description": "Acción textual sin superficie, con indicación direccional.",
+      "html": "<button type=\"button\" class=\"ds-text\">Ver registro<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg></button>",
+      "css": ".ds-text{display:inline-flex;align-items:center;gap:7px;color:var(--accent, #1a694b);font-family:\"Public Sans Variable\", \"Public Sans\", sans-serif;font-size:12px;font-weight:500;line-height:1.55;background:none;border:0;padding:4px 0;cursor:pointer;transition:background-color 140ms,color 140ms,border-color 140ms}.ds-text:focus-visible{outline:3px solid var(--focus, #236fbe);outline-offset:3px;}@media(hover:hover) and (pointer:fine){.ds-text:hover{color:#104a2e;text-decoration:underline;}}.ds-text:active:not(:disabled){transform:scale(0.985)}.ds-text:disabled{cursor:not-allowed;opacity:.5}@media(prefers-reduced-motion:reduce){.ds-text{transition:none}.ds-text:active:not(:disabled){transform:none}}"
+    },
+    {
+      "name": "Campo con etiqueta",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Etiqueta visible, ayuda enlazada y contorno de foco del sistema.",
+      "html": "<div class=\"ds-field\"><label for=\"ds-code\">Código institucional</label><input id=\"ds-code\" class=\"ds-input\" type=\"text\" aria-describedby=\"ds-code-help\" maxlength=\"30\"/><small id=\"ds-code-help\">Código del padrón escolar.</small></div>",
+      "css": ".ds-field{display:grid;gap:6px;font-family:\"Public Sans Variable\", \"Public Sans\", sans-serif;font-size:12px;font-weight:500;line-height:1.55;color:var(--text, #202723);min-width:0}.ds-field small{font-size:10px;font-weight:400;color:var(--muted, #66716b)}.ds-input{color:var(--text, #202723);background:var(--surface, #fff);border:1px solid #cbd4cd;border-radius:7px;min-height:40px;padding:9px 12px;caret-color:var(--accent, #1a694b);max-width:100%;width:100%;font-family:\"Public Sans Variable\", \"Public Sans\", sans-serif;font-size:12px;font-weight:400;line-height:1.55}.ds-input:focus-visible{outline:3px solid var(--focus, #236fbe);outline-offset:3px;}"
+    },
+    {
+      "name": "Navegación seleccionada",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Enlace lateral seleccionado, con icono SVG y estado de página.",
+      "html": "<nav aria-label=\"Ejemplo de navegación\"><a href=\"#main\" class=\"ds-nav\" aria-current=\"page\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect width=\"7\" height=\"9\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"14\" y=\"3\" rx=\"1\"/><rect width=\"7\" height=\"9\" x=\"14\" y=\"12\" rx=\"1\"/><rect width=\"7\" height=\"5\" x=\"3\" y=\"16\" rx=\"1\"/></svg><span>Resumen</span><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m9 18 6-6-6-6\"/></svg></a></nav>",
+      "css": ".ds-nav{height:36px;display:flex;gap:10px;align-items:center;border-radius:6px;padding:0 12px;background:var(--accent-soft, #eaf3ee);color:#155c3e;font-family:\"Public Sans Variable\", \"Public Sans\", sans-serif;font-size:12px;font-weight:500;line-height:1.55;text-decoration:none;transition:background-color 140ms,color 140ms,border-color 140ms}.ds-nav svg{flex-shrink:0}.ds-nav svg:last-child{margin-left:auto}.ds-nav:focus-visible{outline:3px solid var(--focus, #236fbe);outline-offset:3px;}@media(hover:hover) and (pointer:fine){.ds-nav:hover{background:#e1ede5;color:var(--accent, #1a694b)}}@media(prefers-reduced-motion:reduce){.ds-nav{transition:none}}"
+    },
+    {
+      "name": "Etiquetas de estado",
+      "kind": "chip",
+      "refersTo": "status-badge",
+      "description": "Indicadores de solo lectura; punto y etiqueta conservan el significado.",
+      "html": "<div class=\"ds-statuses\"><span class=\"ds-badge ds-success\"><span class=\"ds-dot\"></span>Confirmado</span><span class=\"ds-badge ds-warning\"><span class=\"ds-dot\"></span>En revisión</span><span class=\"ds-badge ds-danger\"><span class=\"ds-dot\"></span>Rechazado</span><span class=\"ds-badge ds-neutral\"><span class=\"ds-dot\"></span>Sin registro</span></div>",
+      "css": ".ds-statuses{display:flex;flex-wrap:wrap;gap:8px}.ds-badge{display:inline-flex;align-items:center;gap:5px;font-family:\"Public Sans Variable\", \"Public Sans\", sans-serif;font-size:10px;font-weight:500;line-height:1.55;padding:3px 8px;border-radius:5px;white-space:nowrap}.ds-dot{width:5px;height:5px;border-radius:50%;display:inline-block;background:currentColor;flex-shrink:0}.ds-success{background:var(--accent-soft, #eaf3ee);color:#19603f}.ds-warning{background:var(--warning-soft, #fff6e4);color:#82560c}.ds-danger{background:var(--danger-soft, #fff1f1);color:#9d3035}.ds-neutral{background:#eef1f3;color:#53615a}"
+    },
+    {
+      "name": "Superficie de registros",
+      "kind": "card",
+      "refersTo": "surface",
+      "description": "Bloque plano con título, explicación y divisores; sin sombra.",
+      "html": "<section class=\"ds-surface\"><header class=\"ds-surface-header\"><div><h2>Movimientos en este equipo</h2><p>La hora corresponde a la captura original.</p></div></header><div class=\"ds-table-scroll\"><table class=\"ds-table\"><caption>Ejemplo de estructura, sin datos escolares</caption><thead><tr><th>Alumno</th><th>Hora</th><th>Estado</th></tr></thead><tbody><tr><td colspan=\"3\">Todavía no hay movimientos</td></tr></tbody></table></div></section>",
+      "css": ".ds-surface{background:var(--surface, #fff);color:var(--text, #202723);border:1px solid var(--line, #e1e6e2);border-radius:var(--radius,12px);overflow:hidden;font-family:\"Public Sans Variable\", \"Public Sans\", sans-serif;line-height:1.55}.ds-surface-header{padding:20px 24px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px}.ds-surface-header h2{margin:0;font-size:16px;line-height:1.4;letter-spacing:-.015em;font-weight:600}.ds-surface-header p{margin:4px 0 0;font-size:11px;color:var(--muted, #66716b)}.ds-table-scroll{overflow:auto;overscroll-behavior-x:contain}.ds-table{border-collapse:collapse;width:100%;text-align:left;white-space:nowrap;font-variant-numeric:tabular-nums}.ds-table caption{padding:0 24px 12px;text-align:left;font-size:10px;color:var(--muted, #66716b)}.ds-table thead{background:#fafbfc}.ds-table th{font-size:10px;font-weight:500;color:var(--secondary, #58615c);padding:11px 24px;border-top:1px solid var(--line, #e1e6e2);border-bottom:1px solid var(--line, #e1e6e2)}.ds-table td{font-size:11px;padding:14px 24px}@media(hover:hover) and (pointer:fine){.ds-table tbody tr:hover{background:#fcfdfb}}@media(max-width:760px){.ds-surface-header{padding:20px}.ds-table th,.ds-table td{padding-left:20px;padding-right:20px}}"
+    },
+    {
+      "name": "Respuesta de captura pendiente",
+      "kind": "custom",
+      "refersTo": "scan-feedback-warning",
+      "description": "Muestra la copia local pendiente; no representa una asistencia confirmada.",
+      "html": "<section class=\"ds-stage\"><div class=\"ds-scan-symbol\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"48\" height=\"48\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 7V5a2 2 0 0 1 2-2h2\"/><path d=\"M17 3h2a2 2 0 0 1 2 2v2\"/><path d=\"M21 17v2a2 2 0 0 1-2 2h-2\"/><path d=\"M7 21H5a2 2 0 0 1-2-2v-2\"/><path d=\"M7 12h10\"/></svg></div><h1>Listo para leer el carnet</h1><p>Registro de entradas</p><div class=\"ds-feedback\" role=\"status\"><strong>Copia local conservada</strong><p>El servidor aún no confirmó esta captura. Puedes reintentar sin duplicarla.</p></div></section>",
+      "css": ".ds-stage{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:370px;padding:40px;background:var(--surface, #fff);color:var(--text, #202723);border:1px solid var(--line, #e1e6e2);border-radius:12px;font-family:\"Public Sans Variable\", \"Public Sans\", sans-serif;line-height:1.55}.ds-scan-symbol{padding:20px;background:#f0f5f1;color:var(--accent, #1a694b);border-radius:16px;margin-bottom:24px}.ds-stage h1{font-size:25px;line-height:1.25;letter-spacing:-.035em;font-weight:600;margin:0 0 12px}.ds-stage>p{margin:0;color:var(--secondary, #58615c);max-width:45ch;font-size:13px}.ds-feedback{margin-top:24px;width:100%;padding:16px;border-radius:8px;background:var(--warning-soft, #fff6e4);color:var(--warning, #87590b)}.ds-feedback strong{display:block;margin-bottom:4px;font-size:15px;font-weight:600}.ds-feedback p{margin:0;color:inherit;font-size:12px}@media(max-width:760px){.ds-stage{min-height:330px;padding:28px 20px}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Registro diario",
+    "overview": "«Registro diario» organiza la interfaz como un instrumento de trabajo escolar: navegación persistente, resumen legible y registros alineados. La personalidad es sobria, clara y directa. El blanco y los grises verdosos sostienen una densidad operativa; el verde identifica la selección y las acciones principales, y los colores semánticos explican el estado de cada registro.\n\nEl mismo lenguaje recorre acceso, administración y portería: Public Sans, iconos de trazo fino, cifras tabulares, separadores y esquinas moderadas. Las superficies se distinguen por tono y borde; la lectura y la recuperación de una acción tienen prioridad sobre la decoración. La señal principal de portería conserva la diferencia entre copia local, revisión y asistencia confirmada.",
+    "keyCharacteristics": [
+      "Superficie clara y tipografía única autoalojada.",
+      "Tablas, filas y divisores para comparar registros.",
+      "Verde para acción y selección; estados con texto explícito.",
+      "Foco visible y continuidad por teclado entre apertura y cierre.",
+      "Menú móvil y desplazamiento horizontal dentro de las tablas."
+    ],
+    "rules": [
+      {
+        "name": "The Receipt Before Green Rule",
+        "body": "El aviso principal de portería solo presenta «Asistencia confirmada» en verde cuando el recibo reconoce persistencia duradera. Una copia local, una revisión o un resultado de demostración conserva su mensaje y tratamiento de advertencia.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Record Rule",
+        "body": "Usar cifras tabulares en tablas, métricas y reloj para que las columnas conserven su alineación al cambiar los valores.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Work Surface Rule",
+        "body": "Mantener planas las superficies de trabajo y separarlas con borde o tono. Reservar la sombra ambiental para el diálogo superpuesto que ya la utiliza.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do reutilizar la paleta semántica y acompañar cada estado con una etiqueta de texto.",
+      "Do mantener Public Sans autoalojada, cifras tabulares y la jerarquía compacta de títulos.",
+      "Do conservar el foco visible, las etiquetas de los campos y los nombres accesibles de los botones de icono.",
+      "Do colocar el editor de alumnos antes del listado desde 1200 px y devolver el foco al control que lo abrió.",
+      "Do mantener el desplazamiento horizontal dentro de la tabla y comprobar que la página cabe en el viewport.",
+      "Do respetar movimiento reducido y mantener las transiciones de estado breves.",
+      "Do rotular los datos sintéticos y mantener los avisos de licencia al redistribuir fuentes e iconos."
+    ],
+    "donts": [
+      "Don't presentar una captura pendiente o un resultado de demostración como asistencia confirmada.",
+      "Don't añadir imágenes raster decorativas ni sustituir los iconos SVG por caracteres de texto.",
+      "Don't añadir sombras a cada superficie ni contenedores repetidos cuando bastan filas y divisores.",
+      "Don't eliminar el contorno de foco salvo que el contenedor del campo muestre el equivalente observado.",
+      "Don't atribuir al colegio una identidad aprobada, cifras operativas reales, validación física del lector o certificación institucional a partir de estas muestras."
+    ]
+  }
+}
