@@ -2,6 +2,21 @@
 
 17 de noviembre de 2026, America/Lima. Código en la rama `work`. La preparación técnica no equivale a un despliegue en Railway.
 
+## Revisión de la cuenta y del destino — 17 de noviembre
+
+Revisión de solo lectura a las 09:43, America/Lima, mediante el plugin Railway. El proyecto indicado sí existe y es el más reciente de los dos visibles: `adventurous-rejoicing` (`901ba0b1-7151-451e-bdb7-cf1c3a279614`), en el espacio `Seynng09's Projects`. El entorno solicitado es `production` (`d3af507f-f13e-48e3-9263-5b2275ebef60`); ese nombre no acredita aceptación para datos reales.
+
+- Único servicio: `PROYECTO-QR` (`a802f7ca-eb8f-4f02-a850-38fbd6b911b2`), conectado a `s2angelo9876-svg/PROYECTO-QR`, rama **`main`**, con Railpack. No tiene variables, dominio público, proxy TCP ni volumen. No hay PostgreSQL, buckets ni cambios pendientes en el entorno.
+- Último despliegue: `9ad71433-2945-453f-9724-e5f530be246f`, estado **FAILED**, iniciado el 17 de noviembre a las 08:59:42, America/Lima. El log de build bloquea `next@14.2.15` por CVE-2025-55184 y CVE-2025-67779. Este fallo corresponde al origen `main`; no es una prueba del Dockerfile de `work`.
+- La rama remota `work` se comprobó en `a3aa808abbdf52f2cc6f43774c0bedf4a45af4ea`, con Next `16.4.6`, Dockerfile y `railway.toml` preparados. No se rehizo el rediseño ni se mezclaron ramas.
+- **Presupuesto sin verificar:** las herramientas disponibles del plugin no exponen plan, saldo, vencimiento de créditos ni un límite efectivo sin cobro. El panel del navegador requiere una sesión adicional que no quedó disponible. No se puede afirmar que la cuenta exija pago ni que permita este despliegue sin cargos.
+
+Por la condición de costo cero, se detuvo el despliegue antes de modificar Railway. No se ejecutó Railway Agent, no se crearon servicios o dominios, no se ejecutó el bootstrap y no se activaron facturación ni planes. No existe una URL pública del servicio que se pueda entregar como operativa. Esta revisión no ejecutó pruebas HTTP, de PostgreSQL ni de la aplicación remota.
+
+Para continuar, verificar primero el plan y los créditos del espacio propietario, su vencimiento y el mecanismo que impide cargos. Si requiere pago o no garantiza el límite, conservar la ruta local. Si supera esa comprobación, continuar sobre el servicio existente con `work` y el Dockerfile, aprovisionar PostgreSQL 17 dedicado con volumen y ejecutar el instalador desde mantenimiento. Obtener cualquier acceso faltante mediante inicio de sesión seguro o secretos del entorno, nunca por chat ni Git. Mantener la conexión administrativa fuera del servicio web y configurar allí únicamente la conexión `sca_runtime` y sus variables de ejecución.
+
+Los respaldos remotos con restauración probada, los lectores físicos y el piloto institucional siguen pendientes antes de usar datos reales. El registro de esta revisión es documental; no sustituye las comprobaciones de despliegue previstas más abajo.
+
 ## Qué está preparado
 
 - `Dockerfile`: Node 24, build completo de Next, dependencias de producción y ejecución sin root. Se conservan el HTML y los recursos requeridos por CSP y la PWA.
@@ -16,17 +31,17 @@ La restricción vigente es no contratar servicios de pago. Antes de crear servic
 
 Los créditos de prueba o promociones no prueban que el sistema pueda permanecer alojado gratis. La aplicación y PostgreSQL deben estar disponibles durante la jornada; una suspensión afecta API y sincronización. La cola local conserva capturas bajo las condiciones y vigencia documentadas, pero no sustituye un servidor disponible ni habilita captura ilimitada.
 
-Consultar las condiciones vigentes en [Railway Pricing](https://railway.com/pricing) y [planes](https://docs.railway.com/reference/pricing/plans). En esta revisión el proxy del entorno rechazó acceso directo a Railway y a su API; no se verificaron precios, créditos ni condiciones de una cuenta. No se consigna una cuota como si hubiera sido comprobada.
+Consultar las condiciones vigentes en [Railway Pricing](https://railway.com/pricing) y [planes](https://docs.railway.com/reference/pricing/plans). Durante la preparación inicial el proxy del entorno rechazó acceso directo a Railway y a su API. La revisión posterior descrita arriba pudo leer el proyecto mediante el plugin, pero sigue sin verificar plan y créditos. No se consigna una cuota como si hubiera sido comprobada.
 
 ## Cuenta y acceso del operador de despliegue
 
-Crear o iniciar sesión en la cuenta Railway mediante GitHub y autorizar acceso al repositorio `s2angelo9876-svg/PROYECTO-QR`. El proyecto aún no existe según el usuario. El acceso del despliegue debe configurarse mediante una conexión de Railway disponible o un secreto seguro del entorno, nunca pegando credenciales en el chat o en Git.
+Usar la cuenta Railway con acceso al repositorio `s2angelo9876-svg/PROYECTO-QR` y al proyecto existente indicado arriba; no crear otro proyecto para continuar esta instalación. El acceso del despliegue debe configurarse mediante una conexión de Railway disponible o un secreto seguro del entorno, nunca pegando credenciales en el chat o en Git.
 
 Para crear un proyecto desde CLI se necesita una sesión de cuenta o un token de cuenta con permisos adecuados; un token limitado a un proyecto existente no resuelve la creación inicial. La API que requiere acceso es `https://backboard.railway.app/graphql/v2`; la cuenta y sus condiciones se revisan antes de arrancar servicios. Si el entorno deniega ese destino, habilitarlo desde los ajustes de red del entorno y verificar una conexión nueva. Esta entrega no modifica la política de red ni publica una nueva configuración del entorno.
 
 ## Orden de una instalación nueva
 
-1. Verificar el presupuesto y la cuenta. Crear un proyecto vacío, por ejemplo `PROYECTO-QR`, dentro del espacio de trabajo correcto. No reutilizar ni alterar la base de otro sistema.
+1. Verificar el presupuesto y la cuenta. Para esta continuación usar el proyecto existente indicado arriba. Solo en una instalación distinta sin proyecto se crea uno vacío dentro del espacio de trabajo correcto. No reutilizar ni alterar la base de otro sistema.
 2. Crear un servicio PostgreSQL dedicado con almacenamiento persistente. Registrar versión y límites; PostgreSQL 17 es la referencia probada. Este paso consume los recursos o créditos que indique Railway.
 3. Inicializar desde un equipo de mantenimiento autorizado, usando la URL de mantenimiento proporcionada por Railway y una conexión alcanzable. No ejecutar `setup:local` en Railway: intenta crear un contenedor Docker y corresponde a la instalación local.
 4. Crear el servicio web desde GitHub, seleccionar rama `work` y el `Dockerfile` del repositorio. Generar su dominio HTTPS; completar las variables antes de promover un despliegue como operativo.
