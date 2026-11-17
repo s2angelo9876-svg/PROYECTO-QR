@@ -4,6 +4,7 @@ import { verifyToken } from "@/lib/authToken";
 import { databaseConfigured } from "@/lib/db";
 import { resolveSession } from "@/lib/institutionAuth";
 import { contentSecurityPolicy } from "@/lib/contentSecurity";
+import { publicUrl } from "@/lib/publicOrigin";
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl,
     nonce = randomBytes(18).toString("base64"),
@@ -35,7 +36,7 @@ export async function proxy(request: NextRequest) {
     user = null;
   }
   if (!user) {
-    const target = new URL("/admin/login", request.url);
+    const target = publicUrl("/admin/login", request);
     target.searchParams.set("redirect", pathname);
     const response = NextResponse.redirect(target);
     response.cookies.set("sca_admin_token", "", { maxAge: 0, path: "/" });
@@ -46,9 +47,9 @@ export async function proxy(request: NextRequest) {
     user.mustChangePassword &&
     pathname !== "/admin/settings"
   )
-    return NextResponse.redirect(new URL("/admin/settings", request.url));
+    return NextResponse.redirect(publicUrl("/admin/settings", request));
   if (user.role === "porter" && pathname !== "/admin/settings")
-    return NextResponse.redirect(new URL("/ingreso", request.url));
+    return NextResponse.redirect(publicUrl("/ingreso", request));
   return next();
 }
 export const config = { matcher: ["/", "/ingreso", "/admin/:path*"] };

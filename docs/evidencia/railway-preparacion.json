@@ -1,0 +1,20 @@
+{
+  "verifiedAt": "2026-11-17T13:49:39.025Z",
+  "scope": "Local Docker rehearsal using Railway configuration; not a Railway deployment.",
+  "imageId": "sha256:bfefc925cba6fc318ee8e4e0c78c921b9560702f3e7a8effcc0cf3ef9faa8f59",
+  "cleanBuildWithoutInstallationSecrets": true,
+  "freshExternalDatabase": true,
+  "repeatBootstrapRefused": true,
+  "syntheticStudentsCreated": 0,
+  "runtimeRoleWithoutBypassOrSuperuser": true,
+  "maintenanceCredentialsOutsideRuntime": true,
+  "requiresInitialPasswordChange": true,
+  "nonRootRuntime": true,
+  "assignedPort": 4517,
+  "databaseReadiness": "passed",
+  "httpsOriginLoginAndRedirects": "passed",
+  "forgedOriginRejected": true,
+  "secureHttpOnlyCookie": true,
+  "publicShellCspHashesPreserved": true,
+  "railwayDeployment": "pending account access, project creation and free credit verification"
+}

@@ -68,6 +68,8 @@ La suite incluye 82 pruebas de lógica/almacenamiento/criptografía, 14 de Postg
 
 El [registro final de verificación](evidencia/verificacion-final.json) resume las 111 pruebas aprobadas en el entorno de desarrollo. El sistema visual implementado se documenta en [DESIGN.md](../DESIGN.md), con capturas y comprobaciones de foco, menú móvil y desbordamiento en `.impeccable/review/`.
 
+Ampliación del 17 de noviembre: la [preparación para Railway](DESPLIEGUE_RAILWAY.md) añade ocho pruebas de origen HTTPS y redirecciones, elevando las unitarias a 90. El registro de 111 conserva los resultados de la entrega anterior; el ensayo de contenedores se registra por separado en `evidencia/railway-preparacion.json`. Esta ampliación no acredita un despliegue remoto.
+
 ## Trazabilidad orientativa con ISO/IEC 27001 y 27002
 
 Los identificadores del Anexo A de 27001:2022 sirven para ubicar controles; no son una declaración de conformidad ni sustituyen el texto normativo o un análisis institucional.

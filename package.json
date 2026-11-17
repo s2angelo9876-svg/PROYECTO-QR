@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build --webpack",
-    "start": "next start -p 3000",
+    "start": "node scripts/start-production.mjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
@@ -13,6 +13,7 @@
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",
     "setup:local": "node scripts/setup-local.mjs",
+    "setup:database": "node scripts/bootstrap-database.mjs",
     "db:migrate": "node scripts/migrate.mjs",
     "backup": "node scripts/backup.mjs",
     "restore:verify": "node scripts/restore-verify.mjs",

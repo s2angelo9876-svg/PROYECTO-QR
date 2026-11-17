@@ -3,6 +3,7 @@ import { clearAuthCookie } from "@/lib/auth";
 import { originGuard } from "@/lib/demoMode";
 import { getCurrentUser } from "@/lib/auth";
 import { databaseConfigured, inSchool, audit } from "@/lib/db";
+import { publicUrl } from "@/lib/publicOrigin";
 
 export async function POST(request: Request) {
   const denied = originGuard(request);
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
       });
   }
   const response = NextResponse.redirect(
-    new URL("/admin/login", request.url),
+    publicUrl("/admin/login", request),
     303,
   );
   clearAuthCookie(response);

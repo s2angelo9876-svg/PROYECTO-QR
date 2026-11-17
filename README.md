@@ -54,6 +54,12 @@ La verificación restaura en una base aislada, compara conteos y huellas de toda
 
 Consulta [operación y recuperación](docs/OPERACION_GRATUITA.md), [implementación de fases 2–5 y controles ISO](docs/IMPLEMENTACION_FASES_2_5.md) y [SDD vigente](docs/SDD_MEJORA_GRATUITA.md).
 
+## Railway
+
+El repositorio incluye `Dockerfile` y `railway.toml`, arranque con el `PORT` asignado, origen HTTPS explícito y un instalador para PostgreSQL externo sin Docker local. Consulta la [guía de preparación y despliegue en Railway](docs/DESPLIEGUE_RAILWAY.md). La aplicación web usa la cuenta restringida generada por el instalador; las credenciales de mantenimiento se guardan aparte.
+
+La configuración preparada no crea servicios ni activa un plan. Antes de desplegar hay que disponer de una cuenta conectada, crear el proyecto y verificar sus créditos, límites y facturación. El software libre del proyecto no garantiza alojamiento gratuito permanente en Railway.
+
 ## Verificación
 
 ```bash

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicOrigin } from "./publicOrigin";
 
 export function demoGuard(): NextResponse | null {
   if (
@@ -20,7 +21,20 @@ export function demoGuard(): NextResponse | null {
 
 export function originGuard(request: Request): NextResponse | null {
   const origin = request.headers.get("origin");
-  if (origin && origin !== new URL(request.url).origin) {
+  let expected: string;
+  try {
+    expected = publicOrigin(request);
+  } catch {
+    return NextResponse.json(
+      {
+        ok: false,
+        code: "PUBLIC_ORIGIN_INVALID",
+        message: "Revisa el origen público configurado del sistema.",
+      },
+      { status: 503 },
+    );
+  }
+  if (origin && origin !== expected) {
     return NextResponse.json(
       { ok: false, code: "UNAUTHORIZED", message: "Origen no autorizado" },
       { status: 403 },
